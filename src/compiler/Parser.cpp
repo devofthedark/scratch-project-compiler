@@ -1,0 +1,498 @@
+#include "Parser.hpp"
+#include "compiler/BinaryOp.hpp"
+#include "compiler/Lexer.hpp"
+#include "compiler/LiteralNodes.hpp"
+#include "compiler/VariableExpression.hpp"
+#include "compiler/FunctionExpression.hpp"
+#include "compiler/VariableAssignment.hpp"
+#include "compiler/VariableDeclaration.hpp"
+#include "compiler/WhileLoopStatement.hpp"
+#include "compiler/FunctionDeclaration.hpp"
+#include "compiler/IfStatement.hpp"
+#include "compiler/ReturnStatement.hpp"
+#include <iostream>
+#include <magic_enum/magic_enum.hpp>
+#include <memory>
+#include <stack>
+#include <utility>
+
+std::unique_ptr<Statement> parse_statement(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end);
+
+std::unique_ptr<FunctionDeclaration> parse_function_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end);
+std::unique_ptr<IfStatement> parse_if_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end);
+std::unique_ptr<WhileLoopStatement> parse_while_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end);
+
+std::unique_ptr<VariableDeclaration> parse_declaration(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end);
+std::unique_ptr<VariableAssignment> parse_assignment(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end);
+std::unique_ptr<FunctionExpression> parse_function_call(
+    std::vector<Token>::const_iterator &begin, 
+    std::vector<Token>::const_iterator end);
+
+std::unique_ptr<Expression> parse_equation(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end);
+/*
+Calculates the bracket deficit in the range [begin, end)
+
+Returns positive if more LPAREN than RPAREN, negative if more RPAREN than LPAREN
+*/
+
+int paren_deficit(std::vector<Token>::const_iterator begin, 
+                   std::vector<Token>::const_iterator end) {
+    int count = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LPAREN) {
+            count++;
+        } else if (it->type == TokenType::RPAREN) {
+            count--;
+        }
+    }
+    return count;
+}
+/*
+Finds the matching RPAREN for the first LPAREN in the range [begin, end)
+If no matching RPAREN is found, returns end
+*/
+std::vector<Token>::const_iterator find_matching_rparen(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    int bracket_count = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LPAREN) {
+            bracket_count++;
+        } else if (it->type == TokenType::RPAREN) {
+            bracket_count--;
+            if (bracket_count == 0) {
+                return it;
+            }
+        }
+    }
+    return end; // No matching RPAREN found
+}
+
+int brace_deficit(std::vector<Token>::const_iterator begin, 
+                   std::vector<Token>::const_iterator end) {
+    int count = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LBRACE) {
+            count++;
+        } else if (it->type == TokenType::RBRACE) {
+            count--;
+        }
+    }
+    return count;
+}
+
+std::vector<Token>::const_iterator find_matching_rbrace(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    int brace_count = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LBRACE) {
+            brace_count++;
+        } else if (it->type == TokenType::RBRACE) {
+            brace_count--;
+            if (brace_count == 0) {
+                return it;
+            }
+        }
+    }
+    return end; // No matching RBRACE found
+}
+
+/*
+Parses a list of tokens into a BlockStatement (AST)
+
+Range is [begin, end)
+*/
+BlockStatement parse_tokens(std::vector<Token>::const_iterator begin, 
+                             std::vector<Token>::const_iterator end,
+                             bool allow_functions) {
+    std::vector<std::unique_ptr<Statement>> statements;
+
+    // Really disgusting code
+    for (auto it = begin; it != end; ++it) {
+        // Anything that has a block attached to it (function, while, if)
+        if ((it->type == TokenType::FN && allow_functions) || it->type == TokenType::IF || it->type == TokenType::WHILE) {
+            auto brace_start = find_matching_rparen(it, end);
+            if (brace_start == end) {
+                throw std::runtime_error("Unmatched braces in block statement");
+            }
+            auto brace_end = find_matching_rbrace(brace_start, end);
+            if (brace_deficit(brace_start, brace_end+1) != 0) {
+                throw std::runtime_error("RBACE not at end of block statement");
+            }
+            if (it->type == TokenType::FN) {
+                statements.push_back(parse_function_header(it + 1, brace_end));
+            } else if (it->type == TokenType::IF) {
+                statements.push_back(parse_if_header(it, brace_end));
+            } else if (it->type == TokenType::WHILE) {
+                statements.push_back(parse_while_header(it, brace_end));
+            }
+            it = brace_end;
+            continue;
+        }
+        // Typical token (ends in ;)
+
+        auto start_pos = it;
+
+        while (it != end && it->type != TokenType::SEMICOLON) {
+            it++;
+        }
+        if (it == end) {
+            throw std::runtime_error("Unmatched semicolon in statement");
+        }
+        statements.push_back(parse_statement(start_pos, it));
+
+    }
+    //std::cout << statements.size() << "\n";
+    return BlockStatement(statements);
+}
+
+std::unique_ptr<Statement> parse_statement(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    // Parses a single Statement from the tokens
+    // std::cerr << "parse_statement()\n";
+    if (begin == end) {
+        throw std::runtime_error("Empty statement");
+    }
+
+    if (begin->type == TokenType::NUM) {
+        return parse_declaration(begin, end);
+    }
+    // The only valid begin must be of TokenType::IDENTIFIER
+    // Throw error if not
+    if (begin->type == TokenType::IDENTIFIER) {
+        auto it = begin + 1;
+        if (it == end) {
+            // std::cerr << begin->value << "\n";
+            throw std::runtime_error("Unexpected end of statement after identifier");
+        }
+        if (it->type == TokenType::ASSIGN) {
+            return parse_assignment(begin, end);
+        }
+        if (it->type == TokenType::LPAREN) {
+            return parse_function_call(begin, end);
+        }
+        throw std::runtime_error("Cannot parse naked equation");
+    } 
+    if (begin->type == TokenType::RETURN) {
+        begin++; // Skip the RETURN token
+        if (begin == end) {
+            // Just a return statement
+            // std::cerr << "Return statement\n\n";
+            return std::make_unique<ReturnStatement>(nullptr);
+        }
+        return std::make_unique<ReturnStatement>(parse_equation(begin, end));
+    }
+    throw std::runtime_error("Unexpected token " + std::string(magic_enum::enum_name(begin->type)) + " at start of statement");
+    // Placeholder, should return a valid Statement
+    // std::cerr << "\n\n";
+}
+/*
+parses a function header (name, parameters, return type)
+
+begin is the function name token
+*/
+std::unique_ptr<FunctionDeclaration> parse_function_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end) {
+    // Parses a function header (name, parameters, return type)
+    // TODO: actual parsing, for now just skip and parse block
+    // std::cerr << "parse_function_header()\n";
+    auto loc = find_matching_rparen(begin, end);
+    if (loc == end && paren_deficit(begin, end) != 0) {
+        throw std::runtime_error("Unmatched parentheses in function header");
+    }
+    std::string name = begin->value;
+    std::vector<parameter> parameters;
+    Type return_type = Type::VOID; // void by default
+    for (auto it = begin + 2; it != loc; ++it) {
+        if (it->type != TokenType::NUM) {
+            throw std::runtime_error("Expected type in function parameter");
+        }
+        it++; // Move to identifier
+        if (it == loc || it->type != TokenType::IDENTIFIER) {
+            throw std::runtime_error("Expected identifier in function parameter");
+        }
+        parameters.push_back({it->value, Type::DOUBLE}); // For now, all parameters are DOUBLE
+        if (it + 1 != loc && (it + 1)->type == TokenType::COMMA) {
+            it++; // Skip comma
+        }
+    }
+    // Now find the opening brace
+    auto it = loc;
+    while (it != end && it->type != TokenType::LBRACE) {
+        it++;
+    }
+    if (it == end) {
+        throw std::runtime_error("Expected '{' in function definition");
+    }
+    if (it != loc + 1 && (loc + 1)->type == TokenType::ARROW) {
+        // Has return type
+        auto return_type_token = loc + 2;
+        if (return_type_token == it) {
+            throw std::runtime_error("Expected return type in function definition");
+        }
+        if (return_type_token->type != TokenType::NUM) {
+            throw std::runtime_error("Expected return type in function definition");
+        }
+        // For now, only DOUBLE return type is supported
+        return_type = Type::DOUBLE;
+    } else if (it != loc + 1) {
+        throw std::runtime_error("Unexpected token in function definition");
+    }
+    return std::make_unique<FunctionDeclaration>(name, 
+                                        std::make_unique<BlockStatement>(parse_tokens(it + 1, end, false)),
+                                        std::move(parameters),
+                                        return_type);
+}
+std::unique_ptr<IfStatement> parse_if_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end) {
+    // Parses an if statement header (condition)
+    // For now just skip to the block
+    // std::cerr << "parse_if_header()\n";
+    auto loc = find_matching_rparen(begin, end);
+    if (loc == end && paren_deficit(begin, end) != 0) {
+        throw std::runtime_error("Unmatched parentheses in if header");
+    }
+    // Now find the opening brace
+    auto it = loc;
+    while (it != end && it->type != TokenType::LBRACE) {
+        it++;
+    }
+    if (it == end) {
+        throw std::runtime_error("Expected '{' in if statement");
+    }
+    return std::make_unique<IfStatement>(parse_equation(begin + 2, loc), 
+                                        std::make_unique<BlockStatement>(parse_tokens(it + 1, end, false)),
+                                        nullptr);
+}
+
+std::unique_ptr<WhileLoopStatement> parse_while_header(
+    std::vector<Token>::const_iterator begin,
+    std::vector<Token>::const_iterator end) {
+    // Parses a while statement header (condition)
+    // std::cerr << "parse_while_header()\n";
+    auto loc = find_matching_rparen(begin, end);
+    if (loc == end && paren_deficit(begin, end) != 0) {
+        throw std::runtime_error("Unmatched parentheses in while header");
+    }
+    // Now find the opening brace
+    auto it = loc;
+    while (it != end && it->type != TokenType::LBRACE) {
+        it++;
+    }
+    if (it == end) {
+        throw std::runtime_error("Expected '{' in while statement");
+    }
+    return std::make_unique<WhileLoopStatement>(parse_equation(begin + 2, loc), 
+                                        std::make_unique<BlockStatement>(parse_tokens(it + 1, end, false)));
+}
+
+std::unique_ptr<VariableDeclaration> parse_declaration(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    // Parses a variable declaration statement
+    // std::cerr << "parse_declaration()\n";
+    begin++; // Skip the NUM token
+    if (begin == end) {
+        throw std::runtime_error("Unexpected end of declaration");
+    }
+    if (begin->type != TokenType::IDENTIFIER) {
+        throw std::runtime_error("Expected identifier in declaration");
+    }
+    if (begin + 1 == end || (begin + 1)->type != TokenType::ASSIGN) {
+        throw std::runtime_error("Expected '=' in declaration");
+    }
+    auto assignment = parse_assignment(begin, end);
+    
+    // std::cerr << "\n\n";
+    return std::make_unique<VariableDeclaration>(*assignment, Type::DOUBLE);
+}
+
+std::unique_ptr<VariableAssignment> parse_assignment(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    // Parses an assignment statement
+    // std::cerr << "parse_assignment()\n";
+    if (begin == end || begin->type != TokenType::IDENTIFIER) {
+        throw std::runtime_error("Expected identifier at start of assignment");
+    }
+    auto identifier = begin->value;
+    begin++; // Skip the identifier
+    if (begin == end || begin->type != TokenType::ASSIGN) {
+        throw std::runtime_error("Expected '=' in assignment");
+    }
+    begin++; // Skip the '='
+    if (begin == end) {
+        throw std::runtime_error("Unexpected end of assignment");
+    }
+    // std::cerr << "\n\n";
+    return std::make_unique<VariableAssignment>(identifier, parse_equation(begin, end));
+}
+
+std::unique_ptr<FunctionExpression> parse_function_call(
+    std::vector<Token>::const_iterator &begin, 
+    std::vector<Token>::const_iterator end) {
+    // Parses a function call statement
+    // std::cerr << "parse_function_call()\n";
+    if (begin == end || begin->type != TokenType::IDENTIFIER) {
+        throw std::runtime_error("Expected identifier at start of function call");
+    }
+    // std::cerr << "Function call to " << begin->value << "\n";
+    std::string func_name = begin->value;
+    begin++; // Skip the identifier
+    if (begin == end || begin->type != TokenType::LPAREN) {
+        throw std::runtime_error("Expected '(' in function call");
+    }
+    int bracket_count = paren_deficit(begin, end);
+    if (bracket_count != 0) {
+        throw std::runtime_error("Unmatched parentheses in function call");
+    }
+    if ((end-2)->type == TokenType::COMMA) {
+        throw std::runtime_error("Trailing comma in function call arguments");
+    }
+    std::vector<std::unique_ptr<Expression>> arguments;
+    for (auto it = begin + 1; it != end; ++it) {
+        if (it->type == TokenType::LPAREN) {
+            bracket_count++;
+        } else if (it->type == TokenType::RPAREN) {
+            bracket_count--;
+        } else if (it->type == TokenType::COMMA && bracket_count == 0) {
+            arguments.push_back(parse_equation(begin + 1, it));
+            begin = it;
+        }
+    }
+    arguments.push_back(parse_equation(begin + 1, end - 1));
+    auto res = std::make_unique<FunctionExpression>(func_name, std::move(arguments));
+    // res->print(0, "Function Call Expression: ");
+    return res;
+
+}
+
+
+
+std::unique_ptr<Expression> identifier_to_expression_node(std::vector<Token>::const_iterator &it, 
+                                            const std::vector<Token>::const_iterator &end) {
+    // Converts an identifier token to an Expression
+    if (it + 1 != end && (it + 1)->type == TokenType::LPAREN) {
+        auto start = it;
+        auto func_end = find_matching_rparen(it + 1, end);
+        if (func_end == end && paren_deficit(it + 1, end) != 0) {
+            throw std::runtime_error("Unmatched parentheses in function call within expression");
+        }
+        // Function call
+        it = func_end; // Move iterator to the end of the function call
+        return parse_function_call(start, func_end + 1);
+    }
+    // Variable
+    return std::make_unique<VariableExpression>(it->value);
+}
+
+void process_bracket_closure(std::stack<Token> &operators,
+                  std::stack<std::unique_ptr<Expression>> &output) {
+    while (!operators.empty() && operators.top().type != TokenType::LPAREN) {
+        Token op = operators.top();
+        operators.pop();
+        if (output.size() < 2) {
+            throw std::runtime_error("Insufficient values in expression");
+        }
+        auto right = std::move(output.top());
+        output.pop();
+        auto left = std::move(output.top());
+        output.pop();
+        output.push(std::make_unique<BinaryOp>(std::move(left), std::move(right), token_to_binary_operator(op.type)));
+    }
+    if (operators.empty() || operators.top().type != TokenType::LPAREN) {
+        throw std::runtime_error("Mismatched parentheses in expression");
+    }
+    operators.pop(); // Pop the '('
+}
+
+void process_operator(std::stack<Token> &operators,
+    std::stack<std::unique_ptr<Expression>> &output,
+    std::vector<Token>::const_iterator &it) {
+    while (!operators.empty() && get_operator_precedence(operators.top().type) >= get_operator_precedence(it->type)) {
+        Token op = operators.top();
+        operators.pop();
+        if (output.size() < 2) {
+            throw std::runtime_error("Insufficient values in expression");
+        }
+        auto right = std::move(output.top());
+        output.pop();
+        auto left = std::move(output.top());
+        output.pop();
+        output.push(std::make_unique<BinaryOp>(std::move(left), std::move(right), token_to_binary_operator(op.type)));
+    }
+}
+
+std::unique_ptr<Expression> parse_equation(
+    std::vector<Token>::const_iterator begin, 
+    std::vector<Token>::const_iterator end) {
+    // Parses an equation (expression)
+    // std::cerr << "parse_equation()\n";
+    // For now just print the tokens in the equation
+    for (auto it = begin; it != end; ++it) {
+        // std::cerr << magic_enum::enum_name(it->type) << " ";
+        if (it->type == TokenType::IDENTIFIER || it->type == TokenType::LITERAL_NUMBER) {
+            // std::cerr << "(" << it->value << ") ";
+        }
+    }
+    // We use the shunting yard algorithm to parse the equation into an AST
+    std::stack<Token> operators;
+    std::stack<std::unique_ptr<Expression>> output;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LITERAL_NUMBER) {
+            output.push(std::make_unique<LiteralNumberNode>(std::stod(it->value)));
+            continue;
+        }
+        if (it->type == TokenType::IDENTIFIER) {
+            output.push(identifier_to_expression_node(it, end));
+            continue;
+        }
+        if (it->type == TokenType::LPAREN) {
+            operators.push(*it);
+            continue;
+        } 
+        if (it->type == TokenType::RPAREN) {
+            process_bracket_closure(operators, output);
+            continue;
+        } 
+        // Operator
+        process_operator(operators, output, it);
+        operators.push(*it);
+    }
+    while (!operators.empty()) {
+        Token op = operators.top();
+        operators.pop();
+        if (output.size() < 2) {
+            throw std::runtime_error("Insufficient values in expression:377");
+        }
+        auto right = std::move(output.top());
+        output.pop();
+        auto left = std::move(output.top());
+        output.pop();
+        output.push(std::make_unique<BinaryOp>(std::move(left), std::move(right), token_to_binary_operator(op.type)));
+    }
+    if (output.size() != 1) {
+        throw std::runtime_error("Error parsing expression");
+    }
+    // std::cerr << "Parsed expression:\n";
+    // output.top()->print(0, "Result: ");
+    return std::move(output.top());
+}

@@ -1,0 +1,21 @@
+#Ignore VS Code config
+.vscode/
+
+#Other CMake things
+build/
+*.ninja
+.ninja_*
+*.cmake
+CMakeCache.txt
+compile_commands.json
+_deps/
+CMakeFiles/
+
+#built binary
+scratchc
+
+#clangd cache
+.cache/
+
+#specific version header
+src/version.h

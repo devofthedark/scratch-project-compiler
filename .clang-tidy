@@ -1,0 +1,33 @@
+Checks:
+  -*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  readability-*,
+  misc-*,
+  hicpp-*,
+  performance-*,
+  bugprone-*,
+  modernize-*,
+  portability-*,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -modernize-use-trailing-return-type,
+  -modernize-pass-by-value,
+  -clang-diagnostic-include-cleaner,
+  -llvm-include-cleaner,
+  -misc-include-cleaner,
+  -misc-no-recursion # disable no-recursion check, is a core part of AST generation
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(src)/'
+FormatStyle: file
+CheckOptions:
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'std::string_view'
+

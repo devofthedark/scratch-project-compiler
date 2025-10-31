@@ -1,0 +1,14 @@
+#include "Expression.hpp"
+#include "BlockStatement.hpp"
+#include <memory>
+class WhileLoopStatement : public Statement {
+    private:
+        std::unique_ptr<Expression> condition;
+        std::unique_ptr<BlockStatement> body;
+
+    public:
+        WhileLoopStatement(std::unique_ptr<Expression> condition, std::unique_ptr<BlockStatement> body);
+        Type typeCheck(TypeCheckerContext &ctx) const override;
+        void print(int depth = 0, std::string prefix = "") override;
+        std::string compile(json &work) const override;
+};

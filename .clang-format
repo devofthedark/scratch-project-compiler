@@ -1,0 +1,71 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+ColumnLimit: 100
+
+# Bracing style
+BreakBeforeBraces: Attach       # opening brace on same line
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+
+# This keeps 'else if' and 'else' together with closing brace
+AllowShortBlocksOnASingleLine: Never
+BraceWrapping:
+  AfterControlStatement: false   # if (...) {
+  AfterFunction: false
+  AfterClass: false
+  AfterStruct: false
+  AfterNamespace: false
+  BeforeElse: false              # keeps "} else" on same line
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+
+AlignOperands: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignTrailingComments: true
+
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInAngles: false
+SpaceBeforeSquareBrackets: false
+
+PointerAlignment: Right
+ReferenceAlignment: Right
+
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<.*\.h>'
+    Priority: 1
+  - Regex: '^<.*>'
+    Priority: 2
+  - Regex: '^".*"'
+    Priority: 3
+
+ReflowComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+InsertBraces: true
+
+Cpp11BracedListStyle: true
+BinPackArguments: false
+BinPackParameters: false
+
+NamespaceIndentation: All
+IndentCaseLabels: true
+BreakBeforeBinaryOperators: NonAssignment
+
+# Optional for modern C++ readability:
+DerivePointerAlignment: false
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakComment: 300
+PenaltyReturnTypeOnItsOwnLine: 200
+
