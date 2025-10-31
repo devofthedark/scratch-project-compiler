@@ -1,8 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <vector>
 
-enum class TokenType {
+enum class TokenType : uint8_t {
     // Keywords
     IF,
     ELSE,

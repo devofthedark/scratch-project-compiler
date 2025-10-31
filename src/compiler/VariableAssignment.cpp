@@ -4,11 +4,11 @@ VariableAssignment::VariableAssignment(std::string _name, std::unique_ptr<Expres
     : name(std::move(_name)), value(std::move(_value)) {}
 Type VariableAssignment::typeCheck(TypeCheckerContext &ctx) const {
     // Check if the variable exists and is the correct type
-    Type varType = ctx.lookupVariable(name);
-    if (varType == Type::ERROR) {
+    Type var_type = ctx.lookupVariable(name);
+    if (var_type == Type::ERROR) {
         return Type::ERROR;
     }
-    if (varType != value->typeCheck(ctx)) {
+    if (var_type != value->typeCheck(ctx)) {
         return Type::ERROR;
     }
     return Type::VOID;
@@ -31,7 +31,7 @@ std::string VariableAssignment::compile(json &work) const {
                 3,
                 expr_id,
                 {
-                    10,
+                    10, // NOLINT TODO: find constants??
                     "0"
                 }
             }}

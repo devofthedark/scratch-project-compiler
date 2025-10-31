@@ -2,16 +2,18 @@
 #include <set>
 #include <fstream>
 
-const std::set<std::string> keywords = {"if", "else", "while", "num", "str", "fn", "return"};
-const std::set<std::string> operators = {
+static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
+static const std::set<std::string> OPERATORS = {
     "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%"
 };
-const std::set<char> punctuation = {'(', ')', '{', '}', ';', ','};
-
-bool is_operator_char(char c) {
-    return std::string("+-*/=<>!%|&").find(c) != std::string::npos;
+static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ','};
+namespace {
+bool is_operator_char(char chr) {
+    return std::string("+-*/=<>!%|&").find(chr) != std::string::npos;
 }
-
+}
+// TODO: fix this mess of a function
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 std::vector<Token> tokenize(const std::string& source_file) {
     std::vector<Token> tokens;
     std::ifstream file(source_file);
@@ -25,19 +27,21 @@ std::vector<Token> tokenize(const std::string& source_file) {
         std::string current_token;
         for (size_t i = 0; i < line.length(); ++i) {
             current_token.clear();
-            char c = line[i];
-            if (isspace(c)) {
+            char chr = line[i];
+            if (isspace(chr) != 0) {
                 continue;
             }
 
             // Number (integer or float)
-            if (isdigit(c) || (c == '.' && i + 1 < line.length() && isdigit(line[i + 1]))) {
-                bool hasDot = false;
+            if ((isdigit(chr) != 0) || (chr == '.' && i + 1 < line.length() && (isdigit(line[i + 1]) != 0))) {
+                bool has_dot = false;
 
-                while (i < line.length() && (isdigit(line[i]) || line[i] == '.')) {
+                while (i < line.length() && ((isdigit(line[i]) != 0) || line[i] == '.')) {
                     if (line[i] == '.') {
-                        if (hasDot) break;  // only allow one dot
-                        hasDot = true;
+                        if (has_dot) { 
+                            break;  // only allow one dot
+                        }
+                        has_dot = true;
                     }
                     current_token += line[i++];
                 }
@@ -48,12 +52,12 @@ std::vector<Token> tokenize(const std::string& source_file) {
             }
 
             // Identifier or keyword
-            if (isalpha(c) || c == '_') {
-                while (i < line.length() && (isalnum(line[i]) || line[i] == '_')) {
+            if ((isalpha(chr) != 0) || chr == '_') {
+                while (i < line.length() && ((isalnum(line[i]) != 0) || line[i] == '_')) {
                     current_token += line[i++];
                 }
 
-                if (keywords.find(current_token) != keywords.end()) {
+                if (KEYWORDS.contains(current_token)) {
                     if (current_token == "if") {
                         tokens.push_back({TokenType::IF, current_token, line_number});
                     } else if (current_token == "else") {
@@ -77,13 +81,13 @@ std::vector<Token> tokenize(const std::string& source_file) {
             }
 
             // Operator
-            if (is_operator_char(c)) {
-                current_token += c;
+            if (is_operator_char(chr)) {
+                current_token += chr;
                 while (i + 1 < line.length() && is_operator_char(line[i + 1])) {
                     current_token += line[++i];
                 }
 
-                if (operators.find(current_token) != operators.end()) {
+                if (OPERATORS.contains(current_token)) {
                     if (current_token == "+") {
                         tokens.push_back({TokenType::PLUS, current_token, line_number});
                     } else if (current_token == "-") {
@@ -122,25 +126,25 @@ std::vector<Token> tokenize(const std::string& source_file) {
             }
 
             // Punctuation  
-            if (punctuation.count(c)) {
-                current_token += c;
-                if (c == ';') {
+            if (PUNCTUATION.contains(chr)) {
+                current_token += chr;
+                if (chr == ';') {
                     tokens.push_back({TokenType::SEMICOLON, current_token, line_number});
-                } else if (c == ',') {
+                } else if (chr == ',') {
                     tokens.push_back({TokenType::COMMA, current_token, line_number});
-                } else if (c == '(') {
+                } else if (chr == '(') {
                     tokens.push_back({TokenType::LPAREN, current_token, line_number});
-                } else if (c == ')') {
+                } else if (chr == ')') {
                     tokens.push_back({TokenType::RPAREN, current_token, line_number});
-                } else if (c == '{') {
+                } else if (chr == '{') {
                     tokens.push_back({TokenType::LBRACE, current_token, line_number});
-                } else if (c == '}') {
+                } else if (chr == '}') {
                     tokens.push_back({TokenType::RBRACE, current_token, line_number});
                 }
                 continue;
             }
 
-            throw std::runtime_error("Unknown character \"" + std::string(1, c) + "\" at line " + std::to_string(line_number));
+            throw std::runtime_error("Unknown character \"" + std::string(1, chr) + "\" at line " + std::to_string(line_number));
         }
     }
     file.close();
@@ -149,20 +153,27 @@ std::vector<Token> tokenize(const std::string& source_file) {
 
 int get_operator_precedence(TokenType type) {
     // higher number means higher precedence
+    static constexpr int PRECEDENCE_OR = 1;
+    static constexpr int PRECEDENCE_AND = 2;
+    static constexpr int PRECEDENCE_EQUALS = 3;
+    static constexpr int PRECEDENCE_COMPARISON = 4;
+    static constexpr int PRECEDENCE_ADDITIVE = 5;
+    static constexpr int PRECEDENCE_MULTIPLICATIVE = 6;
+
     switch (type) {
-        case TokenType::OR: return 1;          // ||
-        case TokenType::AND: return 2;         // &&
-        case TokenType::EQUALS:                // ==, !=
-        case TokenType::NOT_EQUALS: return 3;
-        case TokenType::GREATER_THAN:          // >, <, >=, <=
+        case TokenType::OR: return PRECEDENCE_OR;          // ||
+        case TokenType::AND: return PRECEDENCE_AND;         // &&
+        case TokenType::EQUALS:                              // ==, !=
+        case TokenType::NOT_EQUALS: return PRECEDENCE_EQUALS;
+        case TokenType::GREATER_THAN:                        // >, <, >=, <=
         case TokenType::LESS_THAN:
         case TokenType::GREATER_EQUAL:
-        case TokenType::LESS_EQUAL: return 4;
-        case TokenType::PLUS:                   // +, -
-        case TokenType::MINUS: return 5;
-        case TokenType::MULTIPLY:               // *, /, %
+        case TokenType::LESS_EQUAL: return PRECEDENCE_COMPARISON;
+        case TokenType::PLUS:                                 // +, -
+        case TokenType::MINUS: return PRECEDENCE_ADDITIVE;
+        case TokenType::MULTIPLY:                             // *, /, %
         case TokenType::DIVIDE:
-        case TokenType::MOD: return 6;
+        case TokenType::MOD: return PRECEDENCE_MULTIPLICATIVE;
         default: return 0; // Non-operators
     }
 }

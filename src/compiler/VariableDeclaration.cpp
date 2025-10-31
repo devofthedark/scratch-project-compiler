@@ -1,8 +1,9 @@
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
+#include <utility>
 #include "VariableDeclaration.hpp"
 VariableDeclaration::VariableDeclaration(std::string _name, std::unique_ptr<Expression> _value, Type _type)
-    : VariableAssignment(_name, std::move(_value)), type(_type) {}
+    : VariableAssignment(std::move(_name), std::move(_value)), type(_type) {}
 VariableDeclaration::VariableDeclaration(VariableAssignment& assignment, Type _type)
     : VariableAssignment(std::move(assignment)), type(_type) {}
 Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) const {
@@ -11,12 +12,12 @@ Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) const {
         return Type::ERROR;
     }
     // Check the initializer
-    Type initType = value->typeCheck(ctx);
-    if (initType == Type::ERROR) {
+    Type init_type = value->typeCheck(ctx);
+    if (init_type == Type::ERROR) {
         return Type::ERROR;
     }
     // Check if the initializer type matches the variable type
-    if (initType != type) {
+    if (init_type != type) {
         return Type::ERROR;
     }
     // Add the variable to the context

@@ -4,8 +4,8 @@ WhileLoopStatement::WhileLoopStatement(std::unique_ptr<Expression> _condition, s
     : condition(std::move(_condition)), body(std::move(_body)) {}
 Type WhileLoopStatement::typeCheck(TypeCheckerContext &ctx) const {
     // Check the condition
-    Type condType = condition->typeCheck(ctx);
-    if (condType != Type::BOOL) {
+    Type cond_type = condition->typeCheck(ctx);
+    if (cond_type != Type::BOOL) {
         return Type::ERROR;
     }
     return body->typeCheck(ctx);

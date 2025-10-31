@@ -4,8 +4,11 @@
 #include <memory>
 class VariableAssignment : public Statement {
     protected:
+        // Design is intentional, stop clang-tidy from complaining
+        // NOLINTBEGIN
         std::string name;
         std::unique_ptr<Expression> value;
+        // NOLINTEND
 
     public:
         VariableAssignment(std::string name, std::unique_ptr<Expression> value);
