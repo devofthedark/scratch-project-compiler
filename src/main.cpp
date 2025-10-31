@@ -10,15 +10,18 @@
 #include "compiler/Parser.hpp"
 #include "compile.hpp"
 
+namespace {
 inline void printversion() {
     fmt::println(strings::generic::version_string, VERSION, __DATE__, __TIME__,
                  COMPILER, COMPILER_VERSION, OS, ARCH);
     std::exit(0);
 }
+}
 template <>
 struct fmt::formatter<argparse::ArgumentParser> : ostream_formatter {};
 int main(int argc, char *argv[]) {
-    std::string dirname, sprite_name;
+    std::string dirname;
+    std::string sprite_name;
 
     argparse::ArgumentParser program("sratchc", VERSION,
                                      argparse::default_arguments::help);
@@ -68,7 +71,7 @@ int main(int argc, char *argv[]) {
     if (program.is_subcommand_used(new_command)) {
         // create a new project
         std::cout << "new command used\n";
-        std::cout << dirname << std::endl;
+        std::cout << dirname << '\n';
         new_project(dirname);
     } else if (program.is_subcommand_used(sprite_command)) {
         fmt::println("Sprite command used");
@@ -96,11 +99,11 @@ int main(int argc, char *argv[]) {
     //     fmt::println("{}: {} (line {})", magic_enum::enum_name(token.type),
     //                  token.value, token.line);
     // }
-    BlockStatement AST = parse_tokens(tokens.begin(), tokens.end());
-    AST.print();
+    BlockStatement ast = parse_tokens(tokens.begin(), tokens.end());
+    ast.print();
     TypeCheckerContext ctx;
     // auto check = AST.typeCheck(ctx);
     // fmt::println("AST Type Check Result: {}", magic_enum::enum_name(check));
-    auto tmp = compile_project(ctx, AST);
+    auto tmp = compile_project(ctx, ast);
     fmt::println("Compiled JSON:\n{}", tmp.dump(4));
 }

@@ -5,8 +5,10 @@
 
 #include "config.hpp"
 #include "strings.hpp"
+#include "project.hpp"
 template <> struct fmt::formatter<std::filesystem::path> : ostream_formatter {};
 using json = nlohmann::json;
+namespace {
 void can_create_check(const std::filesystem::path &dir) {
     // check if we have read/write permissions, and the directory is empty
     if (!std::filesystem::exists(dir)) {
@@ -31,6 +33,7 @@ void can_create_check(const std::filesystem::path &dir) {
     ofs.close();
     std::filesystem::remove(test_file);
 }
+}
 void new_project(const std::string &dir) {
     std::filesystem::path selected_dir(dir);
     can_create_check(selected_dir);
@@ -39,7 +42,7 @@ void new_project(const std::string &dir) {
     std::ofstream ofs(selected_dir / "script.scratch");
     ofs.close();
     std::ofstream ofs2(selected_dir / "config.json");
-    ofs2 << std::setw(4) << json(ProjectConfig()) << std::endl;
+    ofs2 << std::setw(4) << json(ProjectConfig()) << '\n';
     ofs2.close();
     std::cout << "YES\n";
 }

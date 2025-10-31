@@ -3,6 +3,7 @@
 #include <fstream>
 json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
     // Temporary hardcode a lot of stuff
+    // NOLINTBEGIN
     json result = {
         {"targets", json::array({
             {
@@ -67,13 +68,15 @@ json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
         {"agent", "Scratch Compiler 0.1.0"}
         }
     }};
-    Type astType = ast.typeCheck(ctx);
-    if (astType == Type::ERROR) {
+    // NOLINTEND
+    Type ast_type = ast.typeCheck(ctx);
+    if (ast_type == Type::ERROR) {
         throw std::runtime_error("Type checking failed");
     }
+    // NOLINTNEXTLINE(readability-identifier-length)
     for (const auto& [var, _] : ctx.variables) {
         result["targets"][1]["variables"][var] = json::array({var, 0});
-        std::cerr << "Added variable to JSON: " << var << std::endl;
+        std::cerr << "Added variable to JSON: " << var << '\n';
     }
     std::string main_script_id = ast.compile(result["targets"][1]["blocks"]);
     // Add when flag clicked block
@@ -88,7 +91,7 @@ json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
         {"y", 0}
     };
     std::ofstream ofs("out.json");
-    ofs << std::setw(4) << result << std::endl;
+    ofs << std::setw(4) << result << '\n';
     ofs.close();
     return result;
 }

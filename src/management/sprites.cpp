@@ -4,6 +4,7 @@
 
 #include "config.hpp"
 #include "strings.hpp"
+#include "sprites.hpp"
 using json = nlohmann::json;
 void new_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();
@@ -13,9 +14,9 @@ void new_sprite(std::string name) {
         fmt::println(stderr, "Error: cannot open config.json");
         std::exit(1);
     }
-    json j;
-    ifs >> j;
-    ProjectConfig config = j.get<ProjectConfig>();
+    json json_data;
+    ifs >> json_data;
+    ProjectConfig config = json_data.get<ProjectConfig>();
     ifs.close();
     // check if the sprite already exists
     for (const auto &sprite : config.sprites) {
@@ -43,7 +44,7 @@ void new_sprite(std::string name) {
         fmt::println(stderr, "Error: cannot create config.json");
         std::exit(1);
     }
-    ofs2 << std::setw(4) << json(SpriteConfig(name)) << std::endl;
+    ofs2 << std::setw(4) << json(SpriteConfig(name)) << '\n';
     ofs2.close();
     // add the sprite to the project config
     config.sprites.push_back(name);
@@ -53,7 +54,7 @@ void new_sprite(std::string name) {
         fmt::println(stderr, "Error: cannot open config.json");
         std::exit(1);
     }
-    ofs3 << std::setw(4) << json(config) << std::endl;
+    ofs3 << std::setw(4) << json(config) << '\n';
     ofs3.close();
     fmt::println("Sprite {} created", name);
 }
@@ -65,9 +66,9 @@ void delete_sprite(std::string name) {
         fmt::println(stderr, "Error: cannot open config.json");
         std::exit(1);
     }
-    json j;
-    ifs >> j;
-    ProjectConfig config = j.get<ProjectConfig>();
+    json json_data;
+    ifs >> json_data;
+    ProjectConfig config = json_data.get<ProjectConfig>();
     ifs.close();
     // check if the sprite exists
     bool found = false;
@@ -82,16 +83,16 @@ void delete_sprite(std::string name) {
         std::exit(1);
     }
     // remove the sprite from the project config
-    config.sprites.erase(
-        std::remove(config.sprites.begin(), config.sprites.end(), name),
-        config.sprites.end());
+    auto itr = std::ranges::remove(config.sprites, name);
+    config.sprites.erase(itr.begin(), itr.end());
+
     // write the project config back to the file
     std::ofstream ofs(current_dir / "config.json");
     if (!ofs) {
         fmt::println(stderr, "Error: cannot open config.json");
         std::exit(1);
     }
-    ofs << std::setw(4) << json(config) << std::endl;
+    ofs << std::setw(4) << json(config) << '\n';
     ofs.close();
 
     // remove the sprite directory
