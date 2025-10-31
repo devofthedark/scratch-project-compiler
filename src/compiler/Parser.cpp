@@ -218,7 +218,7 @@ std::unique_ptr<FunctionDeclaration> parse_function_header(
         throw std::runtime_error("Unmatched parentheses in function header");
     }
     std::string name = begin->value;
-    std::vector<parameter> parameters;
+    std::vector<Parameter> parameters;
     Type return_type = Type::VOID; // void by default
     for (auto it = begin + 2; it != loc; ++it) {
         if (it->type != TokenType::NUM) {

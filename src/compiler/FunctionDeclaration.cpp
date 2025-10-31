@@ -3,7 +3,7 @@
 #include "FunctionDeclaration.hpp"
 #include "compiler/ASTNode.hpp"
 
-FunctionDeclaration::FunctionDeclaration(std::string _name, std::unique_ptr<BlockStatement> _body, std::vector<parameter> _parameters, Type _returnType)
+FunctionDeclaration::FunctionDeclaration(std::string _name, std::unique_ptr<BlockStatement> _body, std::vector<Parameter> _parameters, Type _returnType)
     : name(std::move(_name)), body(std::move(_body)), parameters(std::move(_parameters)), returnType(_returnType) {}
 Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
     // Check the return type
@@ -12,12 +12,12 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
     }
     // Check if the function name is already used
     // Check if name starts with "__"
-    if (name.rfind("__", 0) == 0) {
+    if (name.starts_with("__")) {
         return Type::ERROR;
     }
 
     // Check the parameters
-    std::vector<Type> paramTypes(parameters.size());
+    std::vector<Type> param_types(parameters.size());
     for (const auto& param : parameters) {
         if (param.type == Type::ERROR) {
             return Type::ERROR;
@@ -29,7 +29,7 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
         // Add the parameter to the context
         ctx.addVariable(param.name, param.type);
     }
-    if (ctx.lookupFunction(name, paramTypes) != nullptr) {
+    if (ctx.lookupFunction(name, param_types) != nullptr) {
         return Type::ERROR;
     }
     // Set return type
@@ -45,7 +45,7 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
         ctx.removeVariable(param.name);
     }
     // Add the function to the context
-    ctx.addFunction(name, paramTypes, returnType);
+    ctx.addFunction(name, param_types, returnType);
     
     return returnType;
 }

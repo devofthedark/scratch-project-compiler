@@ -9,10 +9,10 @@ const Expression* BinaryOp::getLeft() const { return left.get(); }
 const Expression* BinaryOp::getRight() const { return right.get(); }
 BinaryOperator BinaryOp::getOperator() const { return op; }
 Type BinaryOp::typeCheck(TypeCheckerContext &ctx) const {
-    Type leftType = left->typeCheck(ctx);
-    Type rightType = right->typeCheck(ctx);
+    Type left_type = left->typeCheck(ctx);
+    Type right_type = right->typeCheck(ctx);
 
-    if (leftType == Type::ERROR || rightType == Type::ERROR) {
+    if (left_type == Type::ERROR || right_type == Type::ERROR) {
         return Type::ERROR;
     }
 
@@ -22,38 +22,38 @@ Type BinaryOp::typeCheck(TypeCheckerContext &ctx) const {
         case BinaryOperator::MULTIPLY:
         case BinaryOperator::DIVIDE:
         case BinaryOperator::MODULO:
-            return (leftType == Type::DOUBLE && rightType == Type::DOUBLE) ? Type::DOUBLE : Type::ERROR;
+            return (left_type == Type::DOUBLE && right_type == Type::DOUBLE) ? Type::DOUBLE : Type::ERROR;
         case BinaryOperator::AND:
         case BinaryOperator::OR:
-            return (leftType == Type::BOOL && rightType == Type::BOOL) ? Type::BOOL : Type::ERROR;
+            return (left_type == Type::BOOL && right_type == Type::BOOL) ? Type::BOOL : Type::ERROR;
         case BinaryOperator::EQUAL:
         case BinaryOperator::NOT_EQUAL:
         case BinaryOperator::GREATER_THAN:
         case BinaryOperator::LESS_THAN:
         case BinaryOperator::GREATER_THAN_EQUAL:
         case BinaryOperator::LESS_THAN_EQUAL:
-            return (leftType == Type::DOUBLE && rightType == Type::DOUBLE) ? Type::BOOL : Type::ERROR;
+            return (left_type == Type::DOUBLE && right_type == Type::DOUBLE) ? Type::BOOL : Type::ERROR;
     }
     return Type::ERROR; // Fallback
 }
 void BinaryOp::print(int depth, std::string prefix) {
-    std::string opStr;
+    std::string op_str;
     switch (op) {
-        case BinaryOperator::ADD: opStr = "+"; break;
-        case BinaryOperator::SUBTRACT: opStr = "-"; break;
-        case BinaryOperator::MULTIPLY: opStr = "*"; break;
-        case BinaryOperator::DIVIDE: opStr = "/"; break;
-        case BinaryOperator::MODULO: opStr = "%"; break;
-        case BinaryOperator::AND: opStr = "&&"; break;
-        case BinaryOperator::OR: opStr = "||"; break;
-        case BinaryOperator::EQUAL: opStr = "=="; break;
-        case BinaryOperator::NOT_EQUAL: opStr = "!="; break;
-        case BinaryOperator::GREATER_THAN: opStr = ">"; break;
-        case BinaryOperator::LESS_THAN: opStr = "<"; break;
-        case BinaryOperator::GREATER_THAN_EQUAL: opStr = ">="; break;
-        case BinaryOperator::LESS_THAN_EQUAL: opStr = "<="; break;
+        case BinaryOperator::ADD: op_str = "+"; break;
+        case BinaryOperator::SUBTRACT: op_str = "-"; break;
+        case BinaryOperator::MULTIPLY: op_str = "*"; break;
+        case BinaryOperator::DIVIDE: op_str = "/"; break;
+        case BinaryOperator::MODULO: op_str = "%"; break;
+        case BinaryOperator::AND: op_str = "&&"; break;
+        case BinaryOperator::OR: op_str = "||"; break;
+        case BinaryOperator::EQUAL: op_str = "=="; break;
+        case BinaryOperator::NOT_EQUAL: op_str = "!="; break;
+        case BinaryOperator::GREATER_THAN: op_str = ">"; break;
+        case BinaryOperator::LESS_THAN: op_str = "<"; break;
+        case BinaryOperator::GREATER_THAN_EQUAL: op_str = ">="; break;
+        case BinaryOperator::LESS_THAN_EQUAL: op_str = "<="; break;
     }
-    std::cout << depth_prefix(depth, prefix) << "BinaryOp( " << opStr << " )\n";
+    std::cout << depth_prefix(depth, prefix) << "BinaryOp( " << op_str << " )\n";
     left->print(depth + 1, "left: ");
     right->print(depth + 1, "right: ");
 }
@@ -128,17 +128,19 @@ bool BinaryOp::is_boolean_operator() const {
            op == BinaryOperator::GREATER_THAN_EQUAL ||
            op == BinaryOperator::LESS_THAN_EQUAL;
 }
-json num_value(std::string id, bool is_boolean) {
-    if (id[0] == '[' && id[1] == '4') {
-        return json::array({1, json::parse(id)});
+namespace {
+json num_value(std::string scratch_id, bool is_boolean) {
+    if (scratch_id[0] == '[' && scratch_id[1] == '4') {
+        return json::array({1, json::parse(scratch_id)});
     }
-    if (id[0] == '[' && id[1] == '1') {
-        return json::array({3, json::parse(id), json::array({4, "0"})});
+    if (scratch_id[0] == '[' && scratch_id[1] == '1') {
+        return json::array({3, json::parse(scratch_id), json::array({4, "0"})});
     }
     if (is_boolean) {
-        return json::array({2, id});
+        return json::array({2, scratch_id});
     }
-    return json::array({3, id, json::array({4, "0"})});
+    return json::array({3, scratch_id, json::array({4, "0"})});
+}
 }
 std::string BinaryOp::compile(json &work) const {
     std::string left_id = left->compile(work);
@@ -159,9 +161,16 @@ std::string BinaryOp::compile(json &work) const {
     } else {
         // Compound operator handling
         std::string base_node_id = generate_id();
+        std::string base_opcode;
+        if (op == BinaryOperator::NOT_EQUAL) {
+            base_opcode = "operator_equals";
+        } else if (op == BinaryOperator::GREATER_THAN_EQUAL) {
+            base_opcode = "operator_lt";
+        } else {
+            base_opcode = "operator_gt";
+        }
         work[base_node_id] = {
-            {"opcode", (op == BinaryOperator::NOT_EQUAL) ? "operator_equals" :
-                        (op == BinaryOperator::GREATER_THAN_EQUAL) ? "operator_lt" : "operator_gt"},
+            {"opcode", base_opcode},
             {"inputs", {
                 {input_name() + "1", num_value(left_id, is_boolean)},
                 {input_name() + "2", num_value(right_id, is_boolean)}

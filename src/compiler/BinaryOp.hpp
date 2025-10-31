@@ -3,7 +3,7 @@
 #include "Expression.hpp"
 #include "compiler/ASTNode.hpp"
 #include "compiler/Lexer.hpp"
-enum class BinaryOperator {
+enum class BinaryOperator : uint8_t {
     ADD,
     SUBTRACT,
     MULTIPLY,
@@ -22,15 +22,15 @@ class BinaryOp : public Expression {
     private:
         std::unique_ptr<Expression> left, right;
         BinaryOperator op;
-        std::string opcode() const;
-        std::string input_name() const;
-        bool is_compound_operator() const;
-        bool is_boolean_operator() const;
+        [[nodiscard]] std::string opcode() const;
+        [[nodiscard]] std::string input_name() const;
+        [[nodiscard]] bool is_compound_operator() const;
+        [[nodiscard]] bool is_boolean_operator() const;
     public:
-        BinaryOp(std::unique_ptr<Expression> left, std::unique_ptr<Expression> right, BinaryOperator op);
-        const Expression* getLeft() const;
-        const Expression* getRight() const;
-        BinaryOperator getOperator() const;
+        BinaryOp(std::unique_ptr<Expression> _left, std::unique_ptr<Expression> _right, BinaryOperator _op);
+        [[nodiscard]] const Expression* getLeft() const;
+        [[nodiscard]] const Expression* getRight() const;
+        [[nodiscard]] BinaryOperator getOperator() const;
         Type typeCheck(TypeCheckerContext &ctx) const override;
         void print(int depth = 0, std::string prefix = "") override;
         std::string compile(json &work) const override;

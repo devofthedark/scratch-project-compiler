@@ -1,7 +1,7 @@
 #include "BlockStatement.hpp"
 #include "compiler/ASTNode.hpp"
 
-struct parameter {
+struct Parameter {
     std::string name;
     Type type;
 };
@@ -10,11 +10,11 @@ class FunctionDeclaration : public Statement {
     private:
         std::string name;
         std::unique_ptr<BlockStatement> body;
-        std::vector<parameter> parameters;
+        std::vector<Parameter> parameters;
         Type returnType;
     public:
-        FunctionDeclaration(std::string name, std::unique_ptr<BlockStatement> body, std::vector<parameter> parameters, Type returnType);
+        FunctionDeclaration(std::string name, std::unique_ptr<BlockStatement> body, std::vector<Parameter> parameters, Type returnType);
         Type typeCheck(TypeCheckerContext &ctx) const override;
-        const std::string& getName() const;   
+        [[nodiscard]] const std::string& getName() const;   
         void print(int depth = 0, std::string prefix = "") override;
 };
