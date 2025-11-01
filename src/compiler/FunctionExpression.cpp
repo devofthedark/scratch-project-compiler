@@ -1,12 +1,15 @@
-#include <iostream>
 #include "FunctionExpression.hpp"
+
+#include <iostream>
+
 #include "compiler/ASTNode.hpp"
 
-FunctionExpression::FunctionExpression(std::string _name, std::vector<std::unique_ptr<Expression>> _args)
+FunctionExpression::FunctionExpression(std::string _name,
+                                       std::vector<std::unique_ptr<Expression>> _args)
     : name(std::move(_name)), args(std::move(_args)) {}
 Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) const {
     // Check if the function exists
-    const FunctionSignature* function_sig = ctx.lookupFunction(name, getArgTypes(ctx));
+    const FunctionSignature *function_sig = ctx.lookupFunction(name, getArgTypes(ctx));
     if (function_sig == nullptr) {
         return Type::ERROR;
     }
@@ -21,16 +24,16 @@ Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) const {
 
     return function_sig->returnType;
 }
-const std::string& FunctionExpression::getName() const {
+const std::string &FunctionExpression::getName() const {
     return name;
 }
-const std::vector<std::unique_ptr<Expression>>& FunctionExpression::getArgs() const {
+const std::vector<std::unique_ptr<Expression>> &FunctionExpression::getArgs() const {
     return args;
 }
 std::vector<Type> FunctionExpression::getArgTypes(TypeCheckerContext &ctx) const {
     std::vector<Type> arg_types;
     arg_types.reserve(args.size());
-    for (const auto& arg : args) {
+    for (const auto &arg : args) {
         arg_types.push_back(arg->typeCheck(ctx));
     }
     return arg_types;

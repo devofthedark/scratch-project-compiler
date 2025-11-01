@@ -1,11 +1,14 @@
-#include <iostream>
 #include "BlockStatement.hpp"
+
+#include <iostream>
+#include <ranges>
+
 #include "compiler/ASTNode.hpp"
 
 BlockStatement::BlockStatement(std::vector<std::unique_ptr<Statement>> &_statements)
     : statements(std::move(_statements)) {}
 Type BlockStatement::typeCheck(TypeCheckerContext &ctx) const {
-    for (const auto& stmt : statements) {
+    for (const auto &stmt : statements) {
         if (stmt->typeCheck(ctx) == Type::ERROR) {
             return Type::ERROR;
         }
@@ -23,15 +26,14 @@ void BlockStatement::print(int depth, std::string prefix) {
 }
 std::string BlockStatement::compile(json &work) const {
     std::string last_id;
-    for (auto it = statements.rbegin(); it != statements.rend(); ++it) {
-        std::string stmt_id = (*it)->compile(work);
+    for (const auto & statement : std::ranges::reverse_view(statements)) {
+        std::string stmt_id = statement->compile(work);
         if (!last_id.empty()) {
             work[stmt_id]["next"] = last_id;
-        }
-        else {
+        } else {
             work[stmt_id]["next"] = nullptr;
         }
         last_id = stmt_id;
     }
     return last_id;
-}   
+}
