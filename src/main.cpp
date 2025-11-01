@@ -1,30 +1,35 @@
-#include <argparse/argparse.hpp>
 #include <fmt/ostream.h>
+
+#include <argparse/argparse.hpp>
 #include <magic_enum/magic_enum.hpp>
 
+#include "compile.hpp"
+#include "compiler/Lexer.hpp"
+#include "compiler/Parser.hpp"
 #include "management/project.hpp"
 #include "management/sprites.hpp"
 #include "strings.hpp"
 #include "version.h"
-#include "compiler/Lexer.hpp"
-#include "compiler/Parser.hpp"
-#include "compile.hpp"
 
 namespace {
-inline void printversion() {
-    fmt::println(strings::generic::version_string, VERSION, __DATE__, __TIME__,
-                 COMPILER, COMPILER_VERSION, OS, ARCH);
-    std::exit(0);
-}
-}
-template <>
-struct fmt::formatter<argparse::ArgumentParser> : ostream_formatter {};
+    inline void printversion() {
+        fmt::println(strings::generic::version_string,
+                     VERSION,
+                     __DATE__,
+                     __TIME__,
+                     COMPILER,
+                     COMPILER_VERSION,
+                     OS,
+                     ARCH);
+        std::exit(0);
+    }
+} // namespace
+template <> struct fmt::formatter<argparse::ArgumentParser> : ostream_formatter {};
 int main(int argc, char *argv[]) {
     std::string dirname;
     std::string sprite_name;
 
-    argparse::ArgumentParser program("sratchc", VERSION,
-                                     argparse::default_arguments::help);
+    argparse::ArgumentParser program("sratchc", VERSION, argparse::default_arguments::help);
     program.add_description(DESCRIPTION);
 
     program.add_argument("-v", "--version")
@@ -32,8 +37,7 @@ int main(int argc, char *argv[]) {
         .flag()
         .action([&](const auto &) { printversion(); });
 
-    argparse::ArgumentParser new_command("new", VERSION,
-                                         argparse::default_arguments::help);
+    argparse::ArgumentParser new_command("new", VERSION, argparse::default_arguments::help);
     new_command.add_description("Creates a new project");
     new_command.add_argument("directory")
         .help("The directory to create the project in")
@@ -41,20 +45,17 @@ int main(int argc, char *argv[]) {
         .store_into(dirname);
     program.add_subparser(new_command);
 
-    argparse::ArgumentParser sprite_command("sprite", VERSION,
-                                            argparse::default_arguments::help);
+    argparse::ArgumentParser sprite_command("sprite", VERSION, argparse::default_arguments::help);
     sprite_command.add_description("Manage project sprites");
 
-    argparse::ArgumentParser sprite_new_command(
-        "new", VERSION, argparse::default_arguments::help);
+    argparse::ArgumentParser sprite_new_command("new", VERSION, argparse::default_arguments::help);
     sprite_new_command.add_description("Creates a new sprite");
-    sprite_new_command.add_argument("name")
-        .help("The name of the sprite")
-        .store_into(sprite_name);
+    sprite_new_command.add_argument("name").help("The name of the sprite").store_into(sprite_name);
     sprite_command.add_subparser(sprite_new_command);
 
-    argparse::ArgumentParser sprite_delete_command(
-        "delete", VERSION, argparse::default_arguments::help);
+    argparse::ArgumentParser sprite_delete_command("delete",
+                                                   VERSION,
+                                                   argparse::default_arguments::help);
     sprite_delete_command.add_description("Deletes a sprite");
     sprite_delete_command.add_argument("name")
         .help("The name of the sprite")
@@ -91,8 +92,8 @@ int main(int argc, char *argv[]) {
         }
     } else {
         fmt::println(stderr, "Error: no command given\n{}", program);
-        //std::exit(1);
-    } 
+        // std::exit(1);
+    }
     std::vector<Token> tokens = tokenize("test.txt");
     // fmt::println("Tokens:");
     // for (const auto &token : tokens) {

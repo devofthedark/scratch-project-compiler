@@ -59,7 +59,7 @@ Cpp11BracedListStyle: true
 BinPackArguments: false
 BinPackParameters: false
 
-NamespaceIndentation: All
+NamespaceIndentation: None
 IndentCaseLabels: true
 BreakBeforeBinaryOperators: NonAssignment
 

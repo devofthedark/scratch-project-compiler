@@ -1,11 +1,13 @@
-#include <filesystem>
+#include "project.hpp"
+
 #include <fmt/ostream.h>
+
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
 #include "config.hpp"
 #include "strings.hpp"
-#include "project.hpp"
 template <> struct fmt::formatter<std::filesystem::path> : ostream_formatter {};
 using json = nlohmann::json;
 namespace {
@@ -25,7 +27,7 @@ void can_create_check(const std::filesystem::path &dir) {
     }
     // test writing a temporary file
     std::filesystem::path test_file = dir / "test";
-    std::ofstream ofs(test_file);
+    std::ofstream         ofs(test_file);
     if (!ofs) {
         fmt::println(stderr, strings::errors::cannot_write, dir);
         std::exit(1);
@@ -33,7 +35,7 @@ void can_create_check(const std::filesystem::path &dir) {
     ofs.close();
     std::filesystem::remove(test_file);
 }
-}
+} // namespace
 void new_project(const std::string &dir) {
     std::filesystem::path selected_dir(dir);
     can_create_check(selected_dir);
