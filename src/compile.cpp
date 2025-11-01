@@ -60,7 +60,7 @@ json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
         throw std::runtime_error("Type checking failed");
     }
     // NOLINTNEXTLINE(readability-identifier-length)
-    for (const auto &[var, _] : ctx.variables) {
+    for (const auto &var : std::views::keys(ctx.getVariables())) {
         result["targets"][1]["variables"][var] = json::array({var, 0});
         std::cerr << "Added variable to JSON: " << var << '\n';
     }

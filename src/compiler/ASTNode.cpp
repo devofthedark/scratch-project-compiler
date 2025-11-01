@@ -33,6 +33,9 @@ void TypeCheckerContext::setExpectedReturnType(Type type) {
 Type TypeCheckerContext::getExpectedReturnType() const {
     return expectedReturnType;
 }
+const std::map<std::string, Type> &TypeCheckerContext::getVariables() const {
+    return variables;
+}
 std::string ASTNode::depth_prefix(int depth, std::string prefix) {
     if (depth == 0) {
         return prefix;

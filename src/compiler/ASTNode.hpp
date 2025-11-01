@@ -37,11 +37,9 @@ class TypeCheckerContext {
 private:
     std::map<FunctionKey, FunctionSignature> functions;
     Type expectedReturnType = Type::VOID;
+    std::map<std::string, Type> variables;
 
 public:
-    // TODO: place this in private
-    // NOLINTNEXTLINE
-    std::map<std::string, Type> variables;
     TypeCheckerContext() = default;
     void addVariable(const std::string &name, Type type);
     void addFunction(const std::string &name, const std::vector<Type> &argTypes, Type returnType);
@@ -51,6 +49,7 @@ public:
     void removeVariable(const std::string &name);
     void setExpectedReturnType(Type type);
     [[nodiscard]] Type getExpectedReturnType() const;
+    [[nodiscard]] const std::map<std::string, Type> &getVariables() const;
 };
 class ASTNode {
 protected:
