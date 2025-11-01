@@ -27,7 +27,7 @@ void can_create_check(const std::filesystem::path &dir) {
     }
     // test writing a temporary file
     std::filesystem::path test_file = dir / "test";
-    std::ofstream         ofs(test_file);
+    std::ofstream ofs(test_file);
     if (!ofs) {
         fmt::println(stderr, strings::errors::cannot_write, dir);
         std::exit(1);

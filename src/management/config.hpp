@@ -9,16 +9,16 @@ class SpriteConfig {
 public:
     std::string name;
     std::string default_costume;
-    double      starting_x        = 0;
-    double      starting_y        = 0;
-    double      starting_rotation = 0;
-    double      starting_scale    = 1;
+    double starting_x = 0;
+    double starting_y = 0;
+    double starting_rotation = 0;
+    double starting_scale = 1;
     explicit SpriteConfig(std::string _name) : name(std::move(_name)) {}
 };
 class ProjectConfig {
 public:
     std::vector<std::string> sprites;
-    std::string              default_costume;
+    std::string default_costume;
     ProjectConfig() : sprites({}) {}
 };
 // NOLINTEND(misc-non-private-member-variables-in-classes)

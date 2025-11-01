@@ -28,10 +28,10 @@ BraceWrapping:
   SplitEmptyNamespace: true
 
 
-AlignOperands: true
-AlignConsecutiveAssignments: true
-AlignConsecutiveDeclarations: true
-AlignTrailingComments: true
+AlignOperands: false
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: false
 
 SpaceBeforeParens: ControlStatements
 SpaceAfterCStyleCast: true

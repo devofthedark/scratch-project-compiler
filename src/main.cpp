@@ -12,17 +12,17 @@
 #include "version.h"
 
 namespace {
-    inline void printversion() {
-        fmt::println(strings::generic::version_string,
-                     VERSION,
-                     __DATE__,
-                     __TIME__,
-                     COMPILER,
-                     COMPILER_VERSION,
-                     OS,
-                     ARCH);
-        std::exit(0);
-    }
+inline void printversion() {
+    fmt::println(strings::generic::version_string,
+                 VERSION,
+                 __DATE__,
+                 __TIME__,
+                 COMPILER,
+                 COMPILER_VERSION,
+                 OS,
+                 ARCH);
+    std::exit(0);
+}
 } // namespace
 template <> struct fmt::formatter<argparse::ArgumentParser> : ostream_formatter {};
 int main(int argc, char *argv[]) {

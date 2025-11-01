@@ -1,10 +1,12 @@
+#include "sprites.hpp"
+
 #include <fmt/ostream.h>
+
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 #include "config.hpp"
 #include "strings.hpp"
-#include "sprites.hpp"
 using json = nlohmann::json;
 void new_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();
