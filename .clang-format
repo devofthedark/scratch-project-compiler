@@ -2,6 +2,8 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
+AccessModifierOffset: -4
+IndentAccessModifiers: false
 
 ColumnLimit: 100
 
