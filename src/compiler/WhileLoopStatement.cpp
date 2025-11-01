@@ -1,6 +1,8 @@
-#include <iostream>
 #include "WhileLoopStatement.hpp"
-WhileLoopStatement::WhileLoopStatement(std::unique_ptr<Expression> _condition, std::unique_ptr<BlockStatement> _body)
+
+#include <iostream>
+WhileLoopStatement::WhileLoopStatement(std::unique_ptr<Expression> _condition,
+                                       std::unique_ptr<BlockStatement> _body)
     : condition(std::move(_condition)), body(std::move(_body)) {}
 Type WhileLoopStatement::typeCheck(TypeCheckerContext &ctx) const {
     // Check the condition
@@ -20,33 +22,16 @@ std::string WhileLoopStatement::compile(json &work) const {
     std::string body_id = body->compile(work);
     // Scratch uses "repeat until" for while loops
     std::string base_condition_id = generate_id();
-    work[base_condition_id] = {
-        {"opcode", "operator_not"},
-        {"inputs", {
-            {"OPERAND", {
-                2,
-                condition_id
-            }}
-        }},
-        {"fields", json::object()},
-        {"topLevel", false},
-        {"shadow", false}
-    };
+    work[base_condition_id] = {{"opcode", "operator_not"},
+                               {"inputs", {{"OPERAND", {2, condition_id}}}},
+                               {"fields", json::object()},
+                               {"topLevel", false},
+                               {"shadow", false}};
     std::string node_id = generate_id();
-    work[node_id] = {
-        {"opcode", "control_repeat_until"},
-        {"inputs", {
-            {"CONDITION", {
-                2,
-                base_condition_id
-            }},
-            {"SUBSTACK", {
-                2,
-                body_id
-            }}
-        }},
-        {"fields", json::object()},
-        {"topLevel", false}
-    };
+    work[node_id] = {{"opcode", "control_repeat_until"},
+                     {"inputs",
+                      {{"CONDITION", {2, base_condition_id}}, {"SUBSTACK", {2, body_id}}}},
+                     {"fields", json::object()},
+                     {"topLevel", false}};
     return node_id;
 }

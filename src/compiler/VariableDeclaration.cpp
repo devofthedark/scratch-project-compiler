@@ -1,10 +1,13 @@
+#include "VariableDeclaration.hpp"
+
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 #include <utility>
-#include "VariableDeclaration.hpp"
-VariableDeclaration::VariableDeclaration(std::string _name, std::unique_ptr<Expression> _value, Type _type)
+VariableDeclaration::VariableDeclaration(std::string _name,
+                                         std::unique_ptr<Expression> _value,
+                                         Type _type)
     : VariableAssignment(std::move(_name), std::move(_value)), type(_type) {}
-VariableDeclaration::VariableDeclaration(VariableAssignment& assignment, Type _type)
+VariableDeclaration::VariableDeclaration(VariableAssignment &assignment, Type _type)
     : VariableAssignment(std::move(assignment)), type(_type) {}
 Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) const {
     // Check if the variable name is already used
@@ -31,5 +34,4 @@ void VariableDeclaration::print(int depth, std::string prefix) {
         value->print(depth + 1, "Initializer: ");
     }
     std::cout << depth_prefix(depth + 1, "Type: ") << magic_enum::enum_name(type) << "\n";
-
 }
