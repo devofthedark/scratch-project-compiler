@@ -12,7 +12,7 @@
 
 namespace {
 inline void printversion() {
-    fmt::println(strings::generic::version_string, VERSION, __DATE__, __TIME__,
+    fmt::println(strings::generic::VERSION_STRING, VERSION, __DATE__, __TIME__,
                  COMPILER, COMPILER_VERSION, OS, ARCH);
     std::exit(0);
 }

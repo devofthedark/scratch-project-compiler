@@ -21,7 +21,7 @@ void new_sprite(std::string name) {
     // check if the sprite already exists
     for (const auto &sprite : config.sprites) {
         if (sprite == name) {
-            fmt::println(stderr, strings::errors::sprite_exists, name);
+            fmt::println(stderr, strings::errors::SPRITE_EXISTS, name);
             std::exit(1);
         }
     }
@@ -79,7 +79,7 @@ void delete_sprite(std::string name) {
         }
     }
     if (!found) {
-        fmt::println(stderr, strings::errors::sprite_does_not_exist, name);
+        fmt::println(stderr, strings::errors::SPRITE_DOES_NOT_EXIST, name);
         std::exit(1);
     }
     // remove the sprite from the project config
