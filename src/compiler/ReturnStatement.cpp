@@ -1,4 +1,5 @@
 #include "compiler/ReturnStatement.hpp"
+
 #include <iostream>
 
 ReturnStatement::ReturnStatement(std::unique_ptr<Expression> _return_value)
@@ -15,7 +16,7 @@ Type ReturnStatement::typeCheck(TypeCheckerContext &ctx) const {
 void ReturnStatement::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "ReturnStatement:\n";
     if (return_value) {
-    return_value->print(depth + 1, "Return Value: ");
+        return_value->print(depth + 1, "Return Value: ");
     } else {
         std::cout << depth_prefix(depth + 1, "Return Value: ") << "nullptr\n";
     }

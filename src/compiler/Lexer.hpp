@@ -47,5 +47,5 @@ struct Token {
     std::string value;
     int line;
 };
-std::vector<Token> tokenize(const std::string& source_file);
+std::vector<Token> tokenize(const std::string &source_file);
 int get_operator_precedence(TokenType type);

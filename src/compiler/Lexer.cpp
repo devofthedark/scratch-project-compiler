@@ -1,20 +1,20 @@
 #include "Lexer.hpp"
-#include <set>
+
 #include <fstream>
+#include <set>
 
 static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
 static const std::set<std::string> OPERATORS = {
-    "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%"
-};
+    "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%"};
 static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ','};
 namespace {
 bool is_operator_char(char chr) {
     return std::string("+-*/=<>!%|&").find(chr) != std::string::npos;
 }
-}
+} // namespace
 // TODO: fix this mess of a function
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
-std::vector<Token> tokenize(const std::string& source_file) {
+std::vector<Token> tokenize(const std::string &source_file) {
     std::vector<Token> tokens;
     std::ifstream file(source_file);
     if (!file.is_open()) {
@@ -33,13 +33,14 @@ std::vector<Token> tokenize(const std::string& source_file) {
             }
 
             // Number (integer or float)
-            if ((isdigit(chr) != 0) || (chr == '.' && i + 1 < line.length() && (isdigit(line[i + 1]) != 0))) {
+            if ((isdigit(chr) != 0)
+                || (chr == '.' && i + 1 < line.length() && (isdigit(line[i + 1]) != 0))) {
                 bool has_dot = false;
 
                 while (i < line.length() && ((isdigit(line[i]) != 0) || line[i] == '.')) {
                     if (line[i] == '.') {
-                        if (has_dot) { 
-                            break;  // only allow one dot
+                        if (has_dot) {
+                            break; // only allow one dot
                         }
                         has_dot = true;
                     }
@@ -125,7 +126,7 @@ std::vector<Token> tokenize(const std::string& source_file) {
                 continue;
             }
 
-            // Punctuation  
+            // Punctuation
             if (PUNCTUATION.contains(chr)) {
                 current_token += chr;
                 if (chr == ';') {
@@ -144,7 +145,8 @@ std::vector<Token> tokenize(const std::string& source_file) {
                 continue;
             }
 
-            throw std::runtime_error("Unknown character \"" + std::string(1, chr) + "\" at line " + std::to_string(line_number));
+            throw std::runtime_error("Unknown character \"" + std::string(1, chr) + "\" at line "
+                                     + std::to_string(line_number));
         }
     }
     file.close();
@@ -161,19 +163,26 @@ int get_operator_precedence(TokenType type) {
     static constexpr int PRECEDENCE_MULTIPLICATIVE = 6;
 
     switch (type) {
-        case TokenType::OR: return PRECEDENCE_OR;          // ||
-        case TokenType::AND: return PRECEDENCE_AND;         // &&
-        case TokenType::EQUALS:                              // ==, !=
-        case TokenType::NOT_EQUALS: return PRECEDENCE_EQUALS;
-        case TokenType::GREATER_THAN:                        // >, <, >=, <=
+        case TokenType::OR:
+            return PRECEDENCE_OR; // ||
+        case TokenType::AND:
+            return PRECEDENCE_AND; // &&
+        case TokenType::EQUALS: // ==, !=
+        case TokenType::NOT_EQUALS:
+            return PRECEDENCE_EQUALS;
+        case TokenType::GREATER_THAN: // >, <, >=, <=
         case TokenType::LESS_THAN:
         case TokenType::GREATER_EQUAL:
-        case TokenType::LESS_EQUAL: return PRECEDENCE_COMPARISON;
-        case TokenType::PLUS:                                 // +, -
-        case TokenType::MINUS: return PRECEDENCE_ADDITIVE;
-        case TokenType::MULTIPLY:                             // *, /, %
+        case TokenType::LESS_EQUAL:
+            return PRECEDENCE_COMPARISON;
+        case TokenType::PLUS: // +, -
+        case TokenType::MINUS:
+            return PRECEDENCE_ADDITIVE;
+        case TokenType::MULTIPLY: // *, /, %
         case TokenType::DIVIDE:
-        case TokenType::MOD: return PRECEDENCE_MULTIPLICATIVE;
-        default: return 0; // Non-operators
+        case TokenType::MOD:
+            return PRECEDENCE_MULTIPLICATIVE;
+        default:
+            return 0; // Non-operators
     }
 }

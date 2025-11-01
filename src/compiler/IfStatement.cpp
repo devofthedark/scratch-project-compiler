@@ -1,9 +1,14 @@
-#include <iostream>
 #include "IfStatement.hpp"
+
+#include <iostream>
+
 #include "compiler/ASTNode.hpp"
 
-IfStatement::IfStatement(std::unique_ptr<Expression> _condition, std::unique_ptr<BlockStatement> _trueBlock, std::unique_ptr<BlockStatement> _falseBlock)
-    : condition(std::move(_condition)), trueBlock(std::move(_trueBlock)), falseBlock(std::move(_falseBlock)) {}
+IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
+                         std::unique_ptr<BlockStatement> _trueBlock,
+                         std::unique_ptr<BlockStatement> _falseBlock)
+    : condition(std::move(_condition)), trueBlock(std::move(_trueBlock)),
+      falseBlock(std::move(_falseBlock)) {}
 Type IfStatement::typeCheck(TypeCheckerContext &ctx) const {
     if (condition->typeCheck(ctx) != Type::BOOL) {
         return Type::ERROR;
@@ -30,17 +35,14 @@ std::string IfStatement::compile(json &work) const {
     std::string condition_id = condition->compile(work);
     std::string true_id = trueBlock->compile(work);
     std::string if_id = generate_id();
-    work[if_id] = {
-        {"opcode", "control_if"},
-        {"inputs", {
-            {"CONDITION", json::array({2, condition_id})},
-            {"SUBSTACK", json::array({2, true_id})}
-        }},
-        {"fields", json::object()},
-        {"next", nullptr},
-        {"topLevel", false},
-        {"shadow", false},
-        {"id", if_id}
-    };
+    work[if_id] = {{"opcode", "control_if"},
+                   {"inputs",
+                    {{"CONDITION", json::array({2, condition_id})},
+                     {"SUBSTACK", json::array({2, true_id})}}},
+                   {"fields", json::object()},
+                   {"next", nullptr},
+                   {"topLevel", false},
+                   {"shadow", false},
+                   {"id", if_id}};
     return if_id;
 }

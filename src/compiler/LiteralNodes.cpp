@@ -1,9 +1,11 @@
-#include <iostream>
-#include <fmt/format.h>
 #include "LiteralNodes.hpp"
+
+#include <fmt/format.h>
+
+#include <iostream>
 LiteralNumberNode::LiteralNumberNode(double _value) : value(_value) {}
 Type LiteralNumberNode::typeCheck(TypeCheckerContext &ctx) const {
-    (void)ctx;
+    (void) ctx;
     return Type::DOUBLE;
 }
 double LiteralNumberNode::getValue() const {
@@ -22,15 +24,15 @@ std::string LiteralNumberNode::clean_to_string() const {
     return str;
 }
 std::string LiteralNumberNode::compile(json &work) const {
-    (void)work;
-    return "[4,\"" + clean_to_string() + "\"]"; 
+    (void) work;
+    return "[4,\"" + clean_to_string() + "\"]";
 }
-LiteralStringNode::LiteralStringNode(const std::string& _value) : value(_value) {}
+LiteralStringNode::LiteralStringNode(const std::string &_value) : value(_value) {}
 Type LiteralStringNode::typeCheck(TypeCheckerContext &ctx) const {
-    (void)ctx;
+    (void) ctx;
     return Type::STRING;
 }
-const std::string& LiteralStringNode::getValue() const {
+const std::string &LiteralStringNode::getValue() const {
     return value;
 }
 void LiteralStringNode::print(int depth, std::string prefix) {
@@ -38,12 +40,13 @@ void LiteralStringNode::print(int depth, std::string prefix) {
 }
 LiteralBoolNode::LiteralBoolNode(bool _value) : value(_value) {}
 Type LiteralBoolNode::typeCheck(TypeCheckerContext &ctx) const {
-    (void)ctx;
+    (void) ctx;
     return Type::BOOL;
 }
 bool LiteralBoolNode::getValue() const {
     return value;
 }
 void LiteralBoolNode::print(int depth, std::string prefix) {
-    std::cout << depth_prefix(depth, prefix) << "LiteralBoolNode( " << (value ? "true" : "false") << " )\n";
+    std::cout << depth_prefix(depth, prefix) << "LiteralBoolNode( " << (value ? "true" : "false")
+              << " )\n";
 }
