@@ -14,22 +14,22 @@ namespace {
 void can_create_check(const std::filesystem::path &dir) {
     // check if we have read/write permissions, and the directory is empty
     if (!std::filesystem::exists(dir)) {
-        fmt::println(stderr, strings::errors::path_not_exist, dir);
+        fmt::println(stderr, strings::errors::PATH_NOT_EXIST, dir);
         std::exit(1);
     }
     if (!std::filesystem::is_directory(dir)) {
-        fmt::println(stderr, strings::errors::path_not_directory, dir);
+        fmt::println(stderr, strings::errors::PATH_NOT_DIRECTORY, dir);
         std::exit(1);
     }
     if (!std::filesystem::is_empty(dir)) {
-        fmt::println(stderr, strings::errors::path_not_empty, dir);
+        fmt::println(stderr, strings::errors::PATH_NOT_EMPTY, dir);
         std::exit(1);
     }
     // test writing a temporary file
     std::filesystem::path test_file = dir / "test";
     std::ofstream ofs(test_file);
     if (!ofs) {
-        fmt::println(stderr, strings::errors::cannot_write, dir);
+        fmt::println(stderr, strings::errors::CANNOT_WRITE, dir);
         std::exit(1);
     }
     ofs.close();
