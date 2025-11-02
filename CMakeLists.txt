@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CXXOPT "-O0 -g")
-set(CXXWARN "-Wall -Wextra -pedantic -Wshadow -Wformat=2 -Wconversion -Wshift-overflow -Wcast-qual -Wcast-align")
+set(CXXWARN "-Wall -Wextra -Werror")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXXOPT} ${CXXWARN}")
 
