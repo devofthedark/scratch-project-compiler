@@ -59,6 +59,7 @@ set(SCOURCES
     "${SRC_DIR}/compiler/VariableExpression.cpp"
     "${SRC_DIR}/compiler/WhileLoopStatement.cpp"
     "${SRC_DIR}/compiler/ReturnStatement.cpp"
+    "${SRC_DIR}/exceptions/LanguageErrors.cpp"
     )
 
 add_executable(scratchc ${SCOURCES})
