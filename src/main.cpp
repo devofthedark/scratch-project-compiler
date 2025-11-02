@@ -1,7 +1,7 @@
-#include <fmt/ostream.h>
-
 #include <argparse/argparse.hpp>
+#include <format>
 #include <magic_enum/magic_enum.hpp>
+#include <sstream>
 
 #include "compile.hpp"
 #include "compiler/Lexer.hpp"
@@ -13,12 +13,25 @@
 
 namespace {
 inline void printversion() {
-    fmt::println(strings::generic::VERSION_STRING, VERSION, __DATE__, __TIME__,
-                 COMPILER, COMPILER_VERSION, OS, ARCH);
+    std::cout << std::format(strings::generic::VERSION_STRING,
+                             VERSION,
+                             __DATE__,
+                             __TIME__,
+                             COMPILER,
+                             COMPILER_VERSION,
+                             OS,
+                             ARCH)
+              << '\n';
     std::exit(0);
 }
 } // namespace
-template <> struct fmt::formatter<argparse::ArgumentParser> : ostream_formatter {};
+template <> struct std::formatter<argparse::ArgumentParser> : std::formatter<std::string> {
+    auto format(const argparse::ArgumentParser &parser, std::format_context &ctx) const {
+        std::ostringstream oss;
+        oss << parser;
+        return std::formatter<std::string>::format(oss.str(), ctx);
+    }
+};
 int main(int argc, char *argv[]) {
     std::string dirname;
     std::string sprite_name;
@@ -60,7 +73,7 @@ int main(int argc, char *argv[]) {
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception &err) {
-        fmt::println(stderr, "{}\n{}", err.what(), program);
+        std::cerr << std::format("{}\n{}\n", err.what(), program);
         std::exit(1);
     }
     if (program.is_subcommand_used(new_command)) {
@@ -69,23 +82,23 @@ int main(int argc, char *argv[]) {
         std::cout << dirname << '\n';
         new_project(dirname);
     } else if (program.is_subcommand_used(sprite_command)) {
-        fmt::println("Sprite command used");
+        std::cout << "Sprite command used\n";
         if (!is_project()) {
-            fmt::println(stderr, "Error: not in a project directory");
+            std::cerr << "Error: not in a project directory\n";
             std::exit(1);
         }
         if (sprite_command.is_subcommand_used(sprite_new_command)) {
-            fmt::println("New sprite command used");
-            fmt::println("Sprite name: {}", sprite_name);
+            std::cout << "New sprite command used\n"
+                      << std::format("Sprite name: {}\n", sprite_name);
             new_sprite(sprite_name);
 
         } else if (sprite_command.is_subcommand_used(sprite_delete_command)) {
-            fmt::println("Delete sprite command used");
-            fmt::println("Sprite name: {}", sprite_name);
+            std::cout << "Delete sprite command used\n"
+                      << std::format("Sprite name: {}\n", sprite_name);
             delete_sprite(sprite_name);
         }
     } else {
-        fmt::println(stderr, "Error: no command given\n{}", program);
+        std::cerr << std::format("Error: no command given\n{}\n", program);
         // std::exit(1);
     }
     std::vector<Token> tokens = tokenize("test.txt");
@@ -100,5 +113,5 @@ int main(int argc, char *argv[]) {
     // auto check = AST.typeCheck(ctx);
     // fmt::println("AST Type Check Result: {}", magic_enum::enum_name(check));
     auto tmp = compile_project(ctx, ast);
-    fmt::println("Compiled JSON:\n{}", tmp.dump(4));
+    std::cout << std::format("Compiled JSON:\n{}\n", tmp.dump(4));
 }
