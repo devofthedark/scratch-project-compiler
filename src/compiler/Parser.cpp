@@ -123,7 +123,7 @@ std::unique_ptr<Statement> parse_statement(std::vector<Token>::const_iterator be
     // Parses a single Statement from the tokens
     // std::cerr << "parse_statement()\n";
     if (begin == end) {
-        throw std::runtime_error("Empty statement");
+        throw SyntaxError("Empty Statement", begin->line);
     }
 
     if (begin->type == TokenType::NUM) {
@@ -361,12 +361,13 @@ std::unique_ptr<Expression> identifier_to_expression_node(
 }
 
 void process_bracket_closure(std::stack<Token> &operators,
-                             std::stack<std::unique_ptr<Expression>> &output) {
+                             std::stack<std::unique_ptr<Expression>> &output,
+                             std::vector<Token>::const_iterator &itr) {
     while (!operators.empty() && operators.top().type != TokenType::LPAREN) {
         Token opr = operators.top();
         operators.pop();
         if (output.size() < 2) {
-            throw std::runtime_error("Insufficient values in expression");
+            throw SyntaxError("Insufficient values in expression", itr->line);
         }
         auto right = std::move(output.top());
         output.pop();
@@ -377,7 +378,7 @@ void process_bracket_closure(std::stack<Token> &operators,
                                                token_to_binary_operator(opr.type)));
     }
     if (operators.empty() || operators.top().type != TokenType::LPAREN) {
-        throw std::runtime_error("Mismatched parentheses in expression");
+        throw SyntaxError("Insufficient values in expression", itr->line);
     }
     operators.pop(); // Pop the '('
 }
@@ -430,7 +431,7 @@ std::unique_ptr<Expression> parse_equation(std::vector<Token>::const_iterator be
             continue;
         }
         if (it->type == TokenType::RPAREN) {
-            process_bracket_closure(operators, output);
+            process_bracket_closure(operators, output, it);
             continue;
         }
         // Operator
