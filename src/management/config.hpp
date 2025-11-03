@@ -5,8 +5,7 @@
 #include <vector>
 // The following are basically structs for serializing and deserializing JSON
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
-class SpriteConfig {
-public:
+struct SpriteConfig {
     std::string name;
     std::string default_costume;
     double starting_x = 0;
@@ -15,8 +14,7 @@ public:
     double starting_scale = 1;
     explicit SpriteConfig(std::string _name) : name(std::move(_name)) {}
 };
-class ProjectConfig {
-public:
+struct ProjectConfig {
     std::vector<std::string> sprites;
     std::string default_costume;
     ProjectConfig() : sprites({}) {}
