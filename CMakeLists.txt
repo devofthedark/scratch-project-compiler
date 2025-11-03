@@ -20,11 +20,7 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/p-ranav/argparse.git
 )
 FetchContent_MakeAvailable(argparse)
-FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG        b43b2f9537db6a1ee66c4ad74b8497853c928d5f)
-FetchContent_MakeAvailable(fmt)
+
 FetchContent_Declare(json 
     GIT_REPOSITORY https://github.com/nlohmann/json
     GIT_TAG 697c7e557c84c37e88beca4eb591e4ac7b0598b8)
@@ -64,5 +60,5 @@ set(SCOURCES
 add_executable(scratchc ${SCOURCES})
 target_include_directories(scratchc PRIVATE "${SRC_DIR}")
 target_link_libraries(scratchc PRIVATE argparse
-    fmt::fmt nlohmann_json::nlohmann_json magic_enum)
+    nlohmann_json::nlohmann_json magic_enum)
     

@@ -1,7 +1,6 @@
 #include "LiteralNodes.hpp"
 
-#include <fmt/format.h>
-
+#include <format>
 #include <iostream>
 LiteralNumberNode::LiteralNumberNode(double _value) : value(_value) {}
 Type LiteralNumberNode::typeCheck(TypeCheckerContext &ctx) const {
@@ -15,7 +14,7 @@ void LiteralNumberNode::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "LiteralNumberNode( " << value << " )\n";
 }
 std::string LiteralNumberNode::clean_to_string() const {
-    std::string str = fmt::format("{:.15f}", value);
+    std::string str = std::format("{:.15f}", value);
     // Remove trailing zeros and decimal point if not needed
     str.erase(str.find_last_not_of('0') + 1, std::string::npos);
     if (str.back() == '.') {
