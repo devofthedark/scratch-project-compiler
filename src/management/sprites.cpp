@@ -1,8 +1,8 @@
 #include "sprites.hpp"
 
-#include <fmt/ostream.h>
-
+#include <format>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "config.hpp"
@@ -13,7 +13,7 @@ void new_sprite(std::string name) {
     // read config.json into a Projectconfig object
     std::ifstream ifs(current_dir / "config.json");
     if (!ifs) {
-        fmt::println(stderr, "Error: cannot open config.json");
+        std::cerr << "Error: cannot open config.json\n";
         std::exit(1);
     }
     json json_data;
@@ -23,7 +23,7 @@ void new_sprite(std::string name) {
     // check if the sprite already exists
     for (const auto &sprite : config.sprites) {
         if (sprite == name) {
-            fmt::println(stderr, strings::errors::SPRITE_EXISTS, name);
+            std::cerr << std::format(strings::errors::SPRITE_EXISTS, name) << '\n';
             std::exit(1);
         }
     }
@@ -36,14 +36,14 @@ void new_sprite(std::string name) {
     // create the script.scratch file
     std::ofstream ofs(current_dir / name / "script.scratch");
     if (!ofs) {
-        fmt::println(stderr, "Error: cannot create script.scratch");
+        std::cerr << "Error: cannot create script.scratch\n";
         std::exit(1);
     }
     ofs.close();
     // create the config.json file
     std::ofstream ofs2(current_dir / name / "config.json");
     if (!ofs2) {
-        fmt::println(stderr, "Error: cannot create config.json");
+        std::cerr << "Error: cannot create config.json\n";
         std::exit(1);
     }
     ofs2 << std::setw(4) << json(SpriteConfig(name)) << '\n';
@@ -53,19 +53,19 @@ void new_sprite(std::string name) {
     // write the project config back to the file
     std::ofstream ofs3(current_dir / "config.json");
     if (!ofs3) {
-        fmt::println(stderr, "Error: cannot open config.json");
+        std::cerr << "Error: cannot open config.json\n";
         std::exit(1);
     }
     ofs3 << std::setw(4) << json(config) << '\n';
     ofs3.close();
-    fmt::println("Sprite {} created", name);
+    std::cout << std::format("Sprite {} created\n", name);
 }
 void delete_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();
     // read config.json into a Projectconfig object
     std::ifstream ifs(current_dir / "config.json");
     if (!ifs) {
-        fmt::println(stderr, "Error: cannot open config.json");
+        std::cerr << "Error: cannot open config.json\n";
         std::exit(1);
     }
     json json_data;
@@ -81,7 +81,7 @@ void delete_sprite(std::string name) {
         }
     }
     if (!found) {
-        fmt::println(stderr, strings::errors::SPRITE_DOES_NOT_EXIST, name);
+        std::cerr << std::format(strings::errors::SPRITE_DOES_NOT_EXIST, name) << '\n';
         std::exit(1);
     }
     // remove the sprite from the project config
@@ -91,7 +91,7 @@ void delete_sprite(std::string name) {
     // write the project config back to the file
     std::ofstream ofs(current_dir / "config.json");
     if (!ofs) {
-        fmt::println(stderr, "Error: cannot open config.json");
+        std::cerr << "Error: cannot open config.json\n";
         std::exit(1);
     }
     ofs << std::setw(4) << json(config) << '\n';
@@ -99,5 +99,5 @@ void delete_sprite(std::string name) {
 
     // remove the sprite directory
     std::filesystem::remove_all(current_dir / name);
-    fmt::println("Sprite {} deleted", name);
+    std::cout << std::format("Sprite {} deleted\n", name);
 }

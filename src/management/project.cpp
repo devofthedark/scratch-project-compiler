@@ -1,35 +1,34 @@
 #include "project.hpp"
 
-#include <fmt/ostream.h>
-
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 
 #include "config.hpp"
 #include "strings.hpp"
-template <> struct fmt::formatter<std::filesystem::path> : ostream_formatter {};
+template <> struct std::formatter<std::filesystem::path> : std::formatter<std::string> {};
 using json = nlohmann::json;
 namespace {
 void can_create_check(const std::filesystem::path &dir) {
     // check if we have read/write permissions, and the directory is empty
     if (!std::filesystem::exists(dir)) {
-        fmt::println(stderr, strings::errors::PATH_NOT_EXIST, dir);
+        std::cerr << std::format(strings::errors::PATH_NOT_EXIST, dir) << '\n';
         std::exit(1);
     }
     if (!std::filesystem::is_directory(dir)) {
-        fmt::println(stderr, strings::errors::PATH_NOT_DIRECTORY, dir);
+        std::cerr << std::format(strings::errors::PATH_NOT_DIRECTORY, dir) << '\n';
         std::exit(1);
     }
     if (!std::filesystem::is_empty(dir)) {
-        fmt::println(stderr, strings::errors::PATH_NOT_EMPTY, dir);
+        std::cerr << std::format(strings::errors::PATH_NOT_EMPTY, dir) << '\n';
         std::exit(1);
     }
     // test writing a temporary file
     std::filesystem::path test_file = dir / "test";
     std::ofstream ofs(test_file);
     if (!ofs) {
-        fmt::println(stderr, strings::errors::CANNOT_WRITE, dir);
+        std::cerr << std::format(strings::errors::CANNOT_WRITE, dir) << '\n';
         std::exit(1);
     }
     ofs.close();
