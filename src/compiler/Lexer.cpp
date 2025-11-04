@@ -1,7 +1,11 @@
 #include "Lexer.hpp"
 
+#include <format>
 #include <fstream>
 #include <set>
+#include <stdexcept>
+
+#include "exceptions/LanguageErrors.hpp"
 
 static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
 static const std::set<std::string> OPERATORS = {
@@ -10,6 +14,105 @@ static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ','};
 namespace {
 bool is_operator_char(char chr) {
     return std::string("+-*/=<>!%|&").find(chr) != std::string::npos;
+}
+Token operator_to_token(const std::string &cur_token, int line_number) {
+    if (cur_token == "+") {
+        return {.type = TokenType::PLUS, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "-") {
+        return {.type = TokenType::MINUS, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "*") {
+        return {.type = TokenType::MULTIPLY, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "/") {
+        return {.type = TokenType::DIVIDE, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "=") {
+        return {.type = TokenType::ASSIGN, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "==") {
+        return {.type = TokenType::EQUALS, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "!=") {
+        return {.type = TokenType::NOT_EQUALS, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == ">=") {
+        return {.type = TokenType::GREATER_EQUAL, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "<=") {
+        return {.type = TokenType::LESS_EQUAL, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == ">") {
+        return {.type = TokenType::GREATER_THAN, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "<") {
+        return {.type = TokenType::LESS_THAN, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "->") {
+        return {.type = TokenType::ARROW, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "&&") {
+        return {.type = TokenType::AND, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "||") {
+        return {.type = TokenType::OR, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "%") {
+        return {.type = TokenType::MOD, .value = cur_token, .line = line_number};
+    }
+    throw SyntaxError(std::format("Unknown Operator \"{}\"", cur_token), line_number);
+}
+Token keyiden_to_token(const std::string &cur_token, int line_number) {
+    if (cur_token == "if") {
+        return {.type = TokenType::IF, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "else") {
+        return {.type = TokenType::ELSE, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "while") {
+        return {.type = TokenType::WHILE, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "num") {
+        return {.type = TokenType::NUM, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "str") {
+        return {.type = TokenType::STR, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "fn") {
+        return {.type = TokenType::FN, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "return") {
+        return {.type = TokenType::RETURN, .value = cur_token, .line = line_number};
+    }
+    return {.type = TokenType::IDENTIFIER, .value = cur_token, .line = line_number};
+}
+Token punctuation_to_token(char cur_token, int line_number) {
+    switch (cur_token) {
+        case ';':
+            return {.type = TokenType::SEMICOLON,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case '(':
+            return {.type = TokenType::LPAREN,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case ')':
+            return {.type = TokenType::RPAREN,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case '{':
+            return {.type = TokenType::LBRACE,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case '}':
+            return {.type = TokenType::RBRACE,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        default:
+            throw std::runtime_error(
+                std::format("How... How'd you even get here? ({}:{})", __FILE_NAME__, __LINE__));
+    }
 }
 } // namespace
 // TODO: fix this mess of a function
@@ -57,26 +160,7 @@ std::vector<Token> tokenize(const std::string &source_file) {
                 while (i < line.length() && ((isalnum(line[i]) != 0) || line[i] == '_')) {
                     current_token += line[i++];
                 }
-
-                if (KEYWORDS.contains(current_token)) {
-                    if (current_token == "if") {
-                        tokens.push_back({TokenType::IF, current_token, line_number});
-                    } else if (current_token == "else") {
-                        tokens.push_back({TokenType::ELSE, current_token, line_number});
-                    } else if (current_token == "while") {
-                        tokens.push_back({TokenType::WHILE, current_token, line_number});
-                    } else if (current_token == "num") {
-                        tokens.push_back({TokenType::NUM, current_token, line_number});
-                    } else if (current_token == "str") {
-                        tokens.push_back({TokenType::STR, current_token, line_number});
-                    } else if (current_token == "fn") {
-                        tokens.push_back({TokenType::FN, current_token, line_number});
-                    } else if (current_token == "return") {
-                        tokens.push_back({TokenType::RETURN, current_token, line_number});
-                    }
-                } else {
-                    tokens.push_back({TokenType::IDENTIFIER, current_token, line_number});
-                }
+                tokens.push_back(keyiden_to_token(current_token, line_number));
                 i--;
                 continue;
             }
@@ -87,66 +171,16 @@ std::vector<Token> tokenize(const std::string &source_file) {
                 while (i + 1 < line.length() && is_operator_char(line[i + 1])) {
                     current_token += line[++i];
                 }
-
-                if (OPERATORS.contains(current_token)) {
-                    if (current_token == "+") {
-                        tokens.push_back({TokenType::PLUS, current_token, line_number});
-                    } else if (current_token == "-") {
-                        tokens.push_back({TokenType::MINUS, current_token, line_number});
-                    } else if (current_token == "*") {
-                        tokens.push_back({TokenType::MULTIPLY, current_token, line_number});
-                    } else if (current_token == "/") {
-                        tokens.push_back({TokenType::DIVIDE, current_token, line_number});
-                    } else if (current_token == "=") {
-                        tokens.push_back({TokenType::ASSIGN, current_token, line_number});
-                    } else if (current_token == "==") {
-                        tokens.push_back({TokenType::EQUALS, current_token, line_number});
-                    } else if (current_token == "!=") {
-                        tokens.push_back({TokenType::NOT_EQUALS, current_token, line_number});
-                    } else if (current_token == ">=") {
-                        tokens.push_back({TokenType::GREATER_EQUAL, current_token, line_number});
-                    } else if (current_token == "<=") {
-                        tokens.push_back({TokenType::LESS_EQUAL, current_token, line_number});
-                    } else if (current_token == ">") {
-                        tokens.push_back({TokenType::GREATER_THAN, current_token, line_number});
-                    } else if (current_token == "<") {
-                        tokens.push_back({TokenType::LESS_THAN, current_token, line_number});
-                    } else if (current_token == "->") {
-                        tokens.push_back({TokenType::ARROW, current_token, line_number});
-                    } else if (current_token == "&&") {
-                        tokens.push_back({TokenType::AND, current_token, line_number});
-                    } else if (current_token == "||") {
-                        tokens.push_back({TokenType::OR, current_token, line_number});
-                    } else if (current_token == "%") {
-                        tokens.push_back({TokenType::MOD, current_token, line_number});
-                    }
-                } else {
-                    throw std::runtime_error("Unknown operator: " + current_token);
-                }
+                tokens.push_back(operator_to_token(current_token, line_number));
                 continue;
             }
 
             // Punctuation
             if (PUNCTUATION.contains(chr)) {
-                current_token += chr;
-                if (chr == ';') {
-                    tokens.push_back({TokenType::SEMICOLON, current_token, line_number});
-                } else if (chr == ',') {
-                    tokens.push_back({TokenType::COMMA, current_token, line_number});
-                } else if (chr == '(') {
-                    tokens.push_back({TokenType::LPAREN, current_token, line_number});
-                } else if (chr == ')') {
-                    tokens.push_back({TokenType::RPAREN, current_token, line_number});
-                } else if (chr == '{') {
-                    tokens.push_back({TokenType::LBRACE, current_token, line_number});
-                } else if (chr == '}') {
-                    tokens.push_back({TokenType::RBRACE, current_token, line_number});
-                }
+                tokens.push_back(punctuation_to_token(chr, line_number));
                 continue;
             }
-
-            throw std::runtime_error("Unknown character \"" + std::string(1, chr) + "\" at line "
-                                     + std::to_string(line_number));
+            throw SyntaxError(std::format("Unknown character \"{}\"", chr), line_number);
         }
     }
     file.close();
