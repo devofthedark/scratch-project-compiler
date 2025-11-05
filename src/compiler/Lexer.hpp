@@ -22,7 +22,7 @@ enum class TokenType : uint8_t {
     MULTIPLY,
     DIVIDE,
     ASSIGN,
-    EQUALS,
+    EQUALS_TEST,
     NOT_EQUALS,
     GREATER_THAN,
     LESS_THAN,
@@ -32,6 +32,7 @@ enum class TokenType : uint8_t {
     // Logical Operators
     AND,
     OR,
+    NOT,
     MOD,
     // Delimiters
     SEMICOLON,

@@ -32,7 +32,7 @@ Token operator_to_token(const std::string &cur_token, int line_number) {
         return {.type = TokenType::ASSIGN, .value = cur_token, .line = line_number};
     }
     if (cur_token == "==") {
-        return {.type = TokenType::EQUALS, .value = cur_token, .line = line_number};
+        return {.type = TokenType::EQUALS_TEST, .value = cur_token, .line = line_number};
     }
     if (cur_token == "!=") {
         return {.type = TokenType::NOT_EQUALS, .value = cur_token, .line = line_number};
@@ -231,7 +231,7 @@ int get_operator_precedence(TokenType type) {
             return PRECEDENCE_OR; // ||
         case TokenType::AND:
             return PRECEDENCE_AND; // &&
-        case TokenType::EQUALS: // ==, !=
+        case TokenType::EQUALS_TEST: // ==, !=
         case TokenType::NOT_EQUALS:
             return PRECEDENCE_EQUALS;
         case TokenType::GREATER_THAN: // >, <, >=, <=

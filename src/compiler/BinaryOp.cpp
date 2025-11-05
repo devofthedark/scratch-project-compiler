@@ -110,7 +110,7 @@ BinaryOperator token_to_binary_operator(TokenType type) {
             return BinaryOperator::AND;
         case TokenType::OR:
             return BinaryOperator::OR;
-        case TokenType::EQUALS:
+        case TokenType::EQUALS_TEST:
             return BinaryOperator::EQUAL;
         case TokenType::NOT_EQUALS:
             return BinaryOperator::NOT_EQUAL;
