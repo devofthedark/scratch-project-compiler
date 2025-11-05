@@ -13,6 +13,7 @@
 #include "compiler/IfStatement.hpp"
 #include "compiler/Lexer.hpp"
 #include "compiler/LiteralNodes.hpp"
+#include "compiler/NotOperator.hpp"
 #include "compiler/ReturnStatement.hpp"
 #include "compiler/VariableAssignment.hpp"
 #include "compiler/VariableDeclaration.hpp"
@@ -390,16 +391,25 @@ void process_operator(std::stack<Token> &operators,
            && get_operator_precedence(operators.top().type) >= get_operator_precedence(itr->type)) {
         Token opr = operators.top();
         operators.pop();
-        if (output.size() < 2) {
-            throw SyntaxError("Insufficient values in expression", itr->line);
+        if (opr.type != TokenType::NOT) {
+            if (output.size() < 2) {
+                throw SyntaxError("Insufficient values in expression", itr->line);
+            }
+            auto right = std::move(output.top());
+            output.pop();
+            auto left = std::move(output.top());
+            output.pop();
+            output.push(std::make_unique<BinaryOp>(std::move(left),
+                                                   std::move(right),
+                                                   token_to_binary_operator(opr.type)));
+        } else {
+            if (output.empty()) {
+                throw SyntaxError("Insufficient values in expression", itr->line);
+                auto operand = std::move(output.top());
+                output.pop();
+                output.push(std::make_unique<NotOperator>(std::move(operand)));
+            }
         }
-        auto right = std::move(output.top());
-        output.pop();
-        auto left = std::move(output.top());
-        output.pop();
-        output.push(std::make_unique<BinaryOp>(std::move(left),
-                                               std::move(right),
-                                               token_to_binary_operator(opr.type)));
     }
 }
 
@@ -441,16 +451,25 @@ std::unique_ptr<Expression> parse_equation(std::vector<Token>::const_iterator be
     while (!operators.empty()) {
         Token opr = operators.top();
         operators.pop();
-        if (output.size() < 2) {
-            throw SyntaxError("Insufficient values in expression", (end - 1)->line);
+        if (opr.type != TokenType::NOT) {
+            if (output.size() < 2) {
+                throw SyntaxError("Insufficient values in expression", (end - 1)->line);
+            }
+            auto right = std::move(output.top());
+            output.pop();
+            auto left = std::move(output.top());
+            output.pop();
+            output.push(std::make_unique<BinaryOp>(std::move(left),
+                                                   std::move(right),
+                                                   token_to_binary_operator(opr.type)));
+        } else {
+            if (output.empty()) {
+                throw SyntaxError("Insufficient values in expression", (end - 1)->line);
+            }
+            auto operand = std::move(output.top());
+            output.pop();
+            output.push(std::make_unique<NotOperator>(std::move(operand)));
         }
-        auto right = std::move(output.top());
-        output.pop();
-        auto left = std::move(output.top());
-        output.pop();
-        output.push(std::make_unique<BinaryOp>(std::move(left),
-                                               std::move(right),
-                                               token_to_binary_operator(opr.type)));
     }
     if (output.size() != 1) {
         throw SyntaxError("Error parsing expression", begin->line);

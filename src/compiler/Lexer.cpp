@@ -9,7 +9,7 @@
 
 static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
 static const std::set<std::string> OPERATORS = {
-    "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%"};
+    "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%", "!"};
 static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ','};
 namespace {
 bool is_operator_char(char chr) {
@@ -60,6 +60,9 @@ Token operator_to_token(const std::string &cur_token, int line_number) {
     }
     if (cur_token == "%") {
         return {.type = TokenType::MOD, .value = cur_token, .line = line_number};
+    }
+    if (cur_token == "!") {
+        return {.type = TokenType::NOT, .value = cur_token, .line = line_number};
     }
     throw SyntaxError(std::format("Unknown Operator \"{}\"", cur_token), line_number);
 }
@@ -225,6 +228,7 @@ int get_operator_precedence(TokenType type) {
     static constexpr int PRECEDENCE_COMPARISON = 4;
     static constexpr int PRECEDENCE_ADDITIVE = 5;
     static constexpr int PRECEDENCE_MULTIPLICATIVE = 6;
+    static constexpr int PRECEDENCE_NOT = 7;
 
     switch (type) {
         case TokenType::OR:
@@ -246,6 +250,8 @@ int get_operator_precedence(TokenType type) {
         case TokenType::DIVIDE:
         case TokenType::MOD:
             return PRECEDENCE_MULTIPLICATIVE;
+        case TokenType::NOT:
+            return PRECEDENCE_NOT;
         default:
             return 0; // Non-operators
     }
