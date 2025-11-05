@@ -63,6 +63,7 @@ Token operator_to_token(const std::string &cur_token, int line_number) {
     }
     throw SyntaxError(std::format("Unknown Operator \"{}\"", cur_token), line_number);
 }
+
 Token keyiden_to_token(const std::string &cur_token, int line_number) {
     if (cur_token == "if") {
         return {.type = TokenType::IF, .value = cur_token, .line = line_number};
@@ -87,6 +88,7 @@ Token keyiden_to_token(const std::string &cur_token, int line_number) {
     }
     return {.type = TokenType::IDENTIFIER, .value = cur_token, .line = line_number};
 }
+
 Token punctuation_to_token(char cur_token, int line_number) {
     switch (cur_token) {
         case ';':
@@ -114,6 +116,88 @@ Token punctuation_to_token(char cur_token, int line_number) {
                 std::format("How... How'd you even get here? ({}:{})", __FILE_NAME__, __LINE__));
     }
 }
+
+void parse_number(std::vector<Token> &tokens,
+                  const std::string &line,
+                  size_t &pos,
+                  int line_number) {
+    std::string current_token;
+    bool has_dot = false;
+
+    while (pos < line.length() && ((isdigit(line[pos]) != 0) || line[pos] == '.')) {
+        if (line[pos] == '.') {
+            if (has_dot) {
+                break; // only allow one dot
+            }
+            has_dot = true;
+        }
+        current_token += line[pos++];
+    }
+
+    tokens.push_back({TokenType::LITERAL_NUMBER, current_token, line_number});
+    pos--;
+}
+
+void parse_identifier(std::vector<Token> &tokens,
+                      const std::string &line,
+                      size_t &pos,
+                      int line_number) {
+    std::string current_token;
+    while (pos < line.length() && ((isalnum(line[pos]) != 0) || line[pos] == '_')) {
+        current_token += line[pos++];
+    }
+    tokens.push_back(keyiden_to_token(current_token, line_number));
+    pos--;
+}
+
+void parse_operator(std::vector<Token> &tokens,
+                    const std::string &line,
+                    size_t &pos,
+                    int line_number) {
+    std::string current_token;
+    current_token += line[pos];
+    while (pos + 1 < line.length() && is_operator_char(line[pos + 1])) {
+        current_token += line[++pos];
+    }
+    tokens.push_back(operator_to_token(current_token, line_number));
+}
+
+void process_line(std::vector<Token> &tokens, std::string line, int line_number) {
+    std::string current_token;
+    for (size_t pos = 0; pos < line.length(); ++pos) {
+        current_token.clear();
+        char chr = line[pos];
+        if (isspace(chr) != 0) {
+            continue;
+        }
+
+        // Number (integer or float)
+        if ((isdigit(chr) != 0)
+            || (chr == '.' && pos + 1 < line.length() && (isdigit(line[pos + 1]) != 0))) {
+            parse_number(tokens, line, pos, line_number);
+            continue;
+        }
+
+        // Identifier or keyword
+        if ((isalpha(chr) != 0) || chr == '_') {
+            parse_identifier(tokens, line, pos, line_number);
+            continue;
+        }
+
+        // Operator
+        if (is_operator_char(chr)) {
+            parse_operator(tokens, line, pos, line_number);
+            continue;
+        }
+
+        // Punctuation
+        if (PUNCTUATION.contains(chr)) {
+            tokens.push_back(punctuation_to_token(chr, line_number));
+            continue;
+        }
+        throw SyntaxError(std::format("Unknown character \"{}\"", chr), line_number);
+    }
+}
 } // namespace
 // TODO: fix this mess of a function
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
@@ -127,61 +211,7 @@ std::vector<Token> tokenize(const std::string &source_file) {
     int line_number = 0;
     while (std::getline(file, line)) {
         line_number++;
-        std::string current_token;
-        for (size_t i = 0; i < line.length(); ++i) {
-            current_token.clear();
-            char chr = line[i];
-            if (isspace(chr) != 0) {
-                continue;
-            }
-
-            // Number (integer or float)
-            if ((isdigit(chr) != 0)
-                || (chr == '.' && i + 1 < line.length() && (isdigit(line[i + 1]) != 0))) {
-                bool has_dot = false;
-
-                while (i < line.length() && ((isdigit(line[i]) != 0) || line[i] == '.')) {
-                    if (line[i] == '.') {
-                        if (has_dot) {
-                            break; // only allow one dot
-                        }
-                        has_dot = true;
-                    }
-                    current_token += line[i++];
-                }
-
-                tokens.push_back({TokenType::LITERAL_NUMBER, current_token, line_number});
-                i--;
-                continue;
-            }
-
-            // Identifier or keyword
-            if ((isalpha(chr) != 0) || chr == '_') {
-                while (i < line.length() && ((isalnum(line[i]) != 0) || line[i] == '_')) {
-                    current_token += line[i++];
-                }
-                tokens.push_back(keyiden_to_token(current_token, line_number));
-                i--;
-                continue;
-            }
-
-            // Operator
-            if (is_operator_char(chr)) {
-                current_token += chr;
-                while (i + 1 < line.length() && is_operator_char(line[i + 1])) {
-                    current_token += line[++i];
-                }
-                tokens.push_back(operator_to_token(current_token, line_number));
-                continue;
-            }
-
-            // Punctuation
-            if (PUNCTUATION.contains(chr)) {
-                tokens.push_back(punctuation_to_token(chr, line_number));
-                continue;
-            }
-            throw SyntaxError(std::format("Unknown character \"{}\"", chr), line_number);
-        }
+        process_line(tokens, line, line_number);
     }
     file.close();
     return tokens;
