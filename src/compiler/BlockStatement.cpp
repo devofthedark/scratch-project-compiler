@@ -1,12 +1,16 @@
 #include "BlockStatement.hpp"
 
+#include <format>
 #include <iostream>
+#include <iterator>
 #include <ranges>
 
 #include "compiler/ASTNode.hpp"
+#include "compiler/Statement.hpp"
 
 BlockStatement::BlockStatement(std::vector<std::unique_ptr<Statement>> &_statements)
-    : statements(std::move(_statements)) {}
+    : statements(std::make_move_iterator(_statements.begin()),
+                 std::make_move_iterator(_statements.end())) {}
 Type BlockStatement::typeCheck(TypeCheckerContext &ctx) const {
     for (const auto &stmt : statements) {
         if (stmt->typeCheck(ctx) == Type::ERROR) {
@@ -20,13 +24,36 @@ void BlockStatement::add(std::unique_ptr<Statement> stmt) {
 }
 void BlockStatement::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "BlockStatement\n";
-    for (size_t i = 0; i < statements.size(); i++) {
-        statements[i]->print(depth + 1, "[" + std::to_string(i) + "] ");
+    int pos = 0;
+    for (const auto &stmt : statements) {
+        stmt->print(depth + 1, std::format("[{}]", pos));
+        ++pos;
     }
 }
+
+StatementSubstitution BlockStatement::make_statement_compat() {
+    StatementSubstitution return_value = {.new_statements = {},
+                                          .tmp_variables = 0,
+                                          .replace_orig = false};
+    for (auto it = statements.begin(); it != statements.end();) {
+        auto compat_statements = (*it)->make_statement_compat();
+        statements.insert(it,
+                          std::make_move_iterator(compat_statements.new_statements.begin()),
+                          std::make_move_iterator(compat_statements.new_statements.end()));
+        return_value.tmp_variables =
+            std::max(return_value.tmp_variables, compat_statements.tmp_variables);
+        if (compat_statements.replace_orig) {
+            it = statements.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return return_value;
+}
+
 std::string BlockStatement::compile(json &work) const {
     std::string last_id;
-    for (const auto & statement : std::ranges::reverse_view(statements)) {
+    for (const auto &statement : std::ranges::reverse_view(statements)) {
         std::string stmt_id = statement->compile(work);
         if (!last_id.empty()) {
             work[stmt_id]["next"] = last_id;

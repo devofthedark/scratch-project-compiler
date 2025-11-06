@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <iostream>
-json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
+json compile_project(TypeCheckerContext &ctx, BlockStatement &ast) {
     // Temporary hardcode a lot of stuff
     // NOLINTBEGIN
     json result = {
@@ -59,7 +59,7 @@ json compile_project(TypeCheckerContext &ctx, const BlockStatement &ast) {
     if (ast_type == Type::ERROR) {
         throw std::runtime_error("Type checking failed");
     }
-    // NOLINTNEXTLINE(readability-identifier-length)
+    ast.make_statement_compat();
     for (const auto &var : std::views::keys(ctx.getVariables())) {
         result["targets"][1]["variables"][var] = json::array({var, 0});
         std::cerr << "Added variable to JSON: " << var << '\n';

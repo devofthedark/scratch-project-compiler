@@ -4,9 +4,9 @@
 class Statement;
 
 struct StatementSubstitution {
-    std::vector<std::unique_ptr<Statement>> compat_statements;
-    int num_new_variables;
-    bool replace_original;
+    std::vector<std::unique_ptr<Statement>> new_statements;
+    int tmp_variables;
+    bool replace_orig;
 };
 
 class Statement : virtual public ASTNode {
