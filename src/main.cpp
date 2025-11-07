@@ -113,5 +113,5 @@ int main(int argc, char *argv[]) {
     // auto check = AST.typeCheck(ctx);
     // fmt::println("AST Type Check Result: {}", magic_enum::enum_name(check));
     auto tmp = compile_project(ctx, ast);
-    std::cout << std::format("Compiled JSON:\n{}\n", tmp.dump(4));
+    // std::cout << std::format("Compiled JSON:\n{}\n", tmp.dump(4));
 }

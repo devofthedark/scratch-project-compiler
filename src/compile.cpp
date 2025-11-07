@@ -65,6 +65,7 @@ json compile_project(TypeCheckerContext &ctx, BlockStatement &ast) {
         result["targets"][1]["variables"][var] = json::array({var, 0});
         std::cerr << "Added variable to JSON: " << var << '\n';
     }
+    ast.print();
     for (int i = 0; i < n_tmp; ++i) {
         std::string tmp_var_name = std::format("__scratch_compiler_internal_tmp_var_{}", i);
         result["targets"][1]["variables"][tmp_var_name] = json::array({tmp_var_name, 0});
