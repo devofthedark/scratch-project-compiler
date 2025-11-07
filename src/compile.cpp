@@ -1,5 +1,6 @@
 #include "compile.hpp"
 
+#include <format>
 #include <fstream>
 #include <iostream>
 json compile_project(TypeCheckerContext &ctx, BlockStatement &ast) {
@@ -59,10 +60,15 @@ json compile_project(TypeCheckerContext &ctx, BlockStatement &ast) {
     if (ast_type == Type::ERROR) {
         throw std::runtime_error("Type checking failed");
     }
-    ast.make_statement_compat();
+    int n_tmp = ast.make_statement_compat().tmp_variables;
     for (const auto &var : std::views::keys(ctx.getVariables())) {
         result["targets"][1]["variables"][var] = json::array({var, 0});
         std::cerr << "Added variable to JSON: " << var << '\n';
+    }
+    for (int i = 0; i < n_tmp; ++i) {
+        std::string tmp_var_name = std::format("__scratch_compiler_internal_tmp_var_{}", i);
+        result["targets"][1]["variables"][tmp_var_name] = json::array({tmp_var_name, 0});
+        std::cerr << "Added variable to JSON: " << tmp_var_name << '\n';
     }
     std::string main_script_id = ast.compile(result["targets"][1]["blocks"]);
     // Add when flag clicked block

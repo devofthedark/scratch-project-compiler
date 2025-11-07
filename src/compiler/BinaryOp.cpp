@@ -1,8 +1,11 @@
 #include "BinaryOp.hpp"
 
 #include <iostream>
+#include <memory>
 
 #include "compiler/ASTNode.hpp"
+#include "compiler/NotOperator.hpp"
+#include "compiler/Statement.hpp"
 
 BinaryOp::BinaryOp(std::unique_ptr<Expression> _left,
                    std::unique_ptr<Expression> _right,
@@ -198,6 +201,34 @@ json num_value(std::string scratch_id, bool is_boolean) {
     return json::array({3, scratch_id, json::array({4, "0"})});
 }
 } // namespace
+
+std::unique_ptr<Expression> BinaryOp::make_expression_compat(
+    StatementSubstitution &statements_added) {
+    auto tmp = left->make_expression_compat(statements_added);
+    if (tmp) {
+        left = std::move(tmp);
+    }
+    tmp = right->make_expression_compat(statements_added);
+    if (tmp) {
+        right = std::move(tmp);
+    }
+    std::cout << "make_expression_compat invoked\n";
+    if (op == BinaryOperator::NOT_EQUAL) {
+        return std::make_unique<NotOperator>(
+            std::make_unique<BinaryOp>(std::move(left), std::move(right), BinaryOperator::EQUAL));
+    }
+    if (op == BinaryOperator::LESS_THAN_EQUAL) {
+        return std::make_unique<NotOperator>(std::make_unique<BinaryOp>(
+            std::move(left), std::move(right), BinaryOperator::GREATER_THAN));
+    }
+    if (op == BinaryOperator::GREATER_THAN_EQUAL) {
+        return std::make_unique<NotOperator>(std::make_unique<BinaryOp>(std::move(left),
+                                                                        std::move(right),
+                                                                        BinaryOperator::LESS_THAN));
+    }
+    return nullptr;
+}
+
 std::string BinaryOp::compile(json &work) const {
     std::string left_id = left->compile(work);
     std::string right_id = right->compile(work);

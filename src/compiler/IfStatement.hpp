@@ -1,5 +1,6 @@
 #include "BlockStatement.hpp"
 #include "Expression.hpp"
+#include "compiler/Statement.hpp"
 
 class IfStatement : public Statement {
 private:
@@ -13,5 +14,6 @@ public:
                 std::unique_ptr<BlockStatement> falseBlock);
     Type typeCheck(TypeCheckerContext &ctx) const override;
     void print(int depth = 0, std::string prefix = "") override;
+    StatementSubstitution make_statement_compat() override;
     std::string compile(json &work) const override;
 };

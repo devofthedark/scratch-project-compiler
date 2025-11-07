@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "compiler/ASTNode.hpp"
+#include "compiler/Statement.hpp"
 
 IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
                          std::unique_ptr<BlockStatement> _trueBlock,
@@ -31,6 +32,18 @@ void IfStatement::print(int depth, std::string prefix) {
         std::cout << depth_prefix(depth + 1, "False Block: ") << "None\n";
     }
 }
+
+StatementSubstitution IfStatement::make_statement_compat() {
+    StatementSubstitution return_value = {.new_statements = {},
+                                          .tmp_variables = 0,
+                                          .replace_orig = false};
+    auto tmp = condition->make_expression_compat(return_value);
+    if (tmp) {
+        condition = std::move(tmp);
+    }
+    return return_value;
+}
+
 std::string IfStatement::compile(json &work) const {
     std::string condition_id = condition->compile(work);
     std::string true_id = trueBlock->compile(work);

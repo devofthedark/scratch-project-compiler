@@ -4,6 +4,7 @@
 #include "Expression.hpp"
 #include "compiler/ASTNode.hpp"
 #include "compiler/Lexer.hpp"
+#include "compiler/Statement.hpp"
 enum class BinaryOperator : uint8_t {
     ADD,
     SUBTRACT,
@@ -37,6 +38,8 @@ public:
     [[nodiscard]] BinaryOperator getOperator() const;
     Type typeCheck(TypeCheckerContext &ctx) const override;
     void print(int depth = 0, std::string prefix = "") override;
+    std::unique_ptr<Expression> make_expression_compat(
+        StatementSubstitution &statements_added) override;
     std::string compile(json &work) const override;
 };
 BinaryOperator token_to_binary_operator(TokenType type);
