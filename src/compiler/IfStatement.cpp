@@ -39,7 +39,8 @@ StatementSubstitution IfStatement::make_statement_compat(const std::set<std::str
                                               trueBlock->make_statement_compat().tmp_variables,
                                           .replace_orig = false};
     if (falseBlock) {
-        return_value.tmp_variables += falseBlock->make_statement_compat(args).tmp_variables;
+        return_value.tmp_variables = std::max(falseBlock->make_statement_compat(args).tmp_variables,
+                                              return_value.tmp_variables);
     }
     replace_if_valid(condition, condition->conv_name(args));
     replace_if_valid(condition, condition->conv_name(args));

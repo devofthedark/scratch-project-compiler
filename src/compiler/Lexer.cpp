@@ -126,11 +126,16 @@ void parse_number(std::vector<Token> &tokens,
                   int line_number) {
     std::string current_token;
     bool has_dot = false;
+    if (line[pos] == '-') {
+        current_token = "-";
+        ++pos;
+    }
 
     while (pos < line.length() && ((isdigit(line[pos]) != 0) || line[pos] == '.')) {
         if (line[pos] == '.') {
             if (has_dot) {
-                break; // only allow one dot
+                throw SyntaxError("Cannot have more than one \".\" in a number",
+                                  line_number); // only allow one dot
             }
             has_dot = true;
         }
@@ -176,7 +181,9 @@ void process_line(std::vector<Token> &tokens, std::string line, int line_number)
 
         // Number (integer or float)
         if ((isdigit(chr) != 0)
-            || (chr == '.' && pos + 1 < line.length() && (isdigit(line[pos + 1]) != 0))) {
+            || (chr == '-' && pos + 1 < line.length() && (isdigit(line[pos + 1]) != 0))
+            || (chr == '-' && pos + 1 < line.length()
+                && (isdigit(line[pos + 1]) != 0 || line[pos + 1] == '.'))) {
             parse_number(tokens, line, pos, line_number);
             continue;
         }

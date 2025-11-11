@@ -40,7 +40,8 @@ StatementSubstitution BlockStatement::make_statement_compat(const std::set<std::
         statements.insert(it,
                           std::make_move_iterator(compat_statements.new_statements.begin()),
                           std::make_move_iterator(compat_statements.new_statements.end()));
-        return_value.tmp_variables += compat_statements.tmp_variables;
+        return_value.tmp_variables =
+            std::max(compat_statements.tmp_variables, return_value.tmp_variables);
         if (compat_statements.replace_orig) {
             it = statements.erase(it);
         } else {

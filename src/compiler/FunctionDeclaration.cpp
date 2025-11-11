@@ -53,6 +53,9 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
         return Type::ERROR;
     }
     ctx.setExpectedReturnType(Type::VOID);
+    for (const auto &param : parameters) {
+        ctx.removeVariable(param.name);
+    }
 
     return returnType;
 }
