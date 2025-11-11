@@ -55,8 +55,6 @@ set(SCOURCES
     "${SRC_DIR}/compiler/NotOperator.cpp"
     "${SRC_DIR}/compiler/Parser.cpp"
     "${SRC_DIR}/compiler/ReturnStatement.cpp"
-    "${SRC_DIR}/compiler/StackPop.cpp"
-    "${SRC_DIR}/compiler/StackTop.cpp"
     "${SRC_DIR}/compiler/Statement.cpp"
     "${SRC_DIR}/compiler/VariableAssignment.cpp"
     "${SRC_DIR}/compiler/VariableDeclaration.cpp"

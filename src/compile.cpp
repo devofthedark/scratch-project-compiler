@@ -71,8 +71,8 @@ json compile_project(TypeCheckerContext &ctx, BlockStatement &ast) {
         result["targets"][1]["variables"][tmp_var_name] = json::array({tmp_var_name, 0});
         std::cerr << "Added variable to JSON: " << tmp_var_name << '\n';
     }
-    result["targets"][1]["lists"]["__scratch_compiler_return_stack"] =
-        json::array({"__scratch_compiler_return_stack", json::array({})});
+    result["targets"][1]["variables"]["return_val"] =
+        json::array({"__scratch_compiler_function_return_value", 0});
 
     std::string main_script_id = ast.compile(result["targets"][1]["blocks"]);
     // Add when flag clicked block

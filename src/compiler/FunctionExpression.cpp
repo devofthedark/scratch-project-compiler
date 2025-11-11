@@ -6,8 +6,6 @@
 
 #include "compiler/ASTNode.hpp"
 #include "compiler/Expression.hpp"
-#include "compiler/StackPop.hpp"
-#include "compiler/StackTop.hpp"
 #include "compiler/Statement.hpp"
 #include "compiler/VariableAssignment.hpp"
 #include "compiler/VariableExpression.hpp"
@@ -99,9 +97,9 @@ std::unique_ptr<Expression> FunctionExpression::make_expression_compat(
         std::format("__scratch_compiler_tmp_var_{}", statements_added.tmp_variables++);
     statements_added.new_statements.push_back(
         std::make_unique<FunctionExpression>(std::move(name), std::move(args)));
-    statements_added.new_statements.push_back(
-        std::make_unique<VariableAssignment>(tmp_var_name, std::make_unique<StackTop>()));
-    statements_added.new_statements.push_back(std::make_unique<StackPop>());
+    statements_added.new_statements.push_back(std::make_unique<VariableAssignment>(
+        tmp_var_name,
+        std::make_unique<VariableExpression>("__scratch_compiler_function_return_value")));
     return std::make_unique<VariableExpression>(tmp_var_name);
 }
 
