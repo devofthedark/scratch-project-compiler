@@ -179,6 +179,10 @@ void process_line(std::vector<Token> &tokens, std::string line, int line_number)
             continue;
         }
 
+        if (chr == '/' && pos + 1 < line.length() && line[pos + 1] == '/') {
+            break;
+        }
+
         // Number (integer or float)
         if ((isdigit(chr) != 0)
             || (chr == '-' && pos + 1 < line.length() && (isdigit(line[pos + 1]) != 0))
