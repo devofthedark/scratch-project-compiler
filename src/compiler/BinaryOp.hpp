@@ -40,6 +40,7 @@ public:
     void print(int depth = 0, std::string prefix = "") override;
     std::unique_ptr<Expression> make_expression_compat(
         StatementSubstitution &statements_added) override;
+    std::unique_ptr<Expression> conv_name(const std::set<std::string> &args = {}) override;
     std::string compile(json &work) const override;
 };
 BinaryOperator token_to_binary_operator(TokenType type);

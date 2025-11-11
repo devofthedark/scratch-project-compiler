@@ -1,5 +1,6 @@
 #include "BlockStatement.hpp"
 #include "compiler/ASTNode.hpp"
+#include "compiler/Statement.hpp"
 
 struct Parameter {
     std::string name;
@@ -21,4 +22,6 @@ public:
     Type typeCheck(TypeCheckerContext &ctx) const override;
     [[nodiscard]] const std::string &getName() const;
     void print(int depth = 0, std::string prefix = "") override;
+    StatementSubstitution make_statement_compat(const std::set<std::string> &args = {}) override;
+    std::string compile(json &work) const override;
 };

@@ -204,14 +204,8 @@ json num_value(std::string scratch_id, bool is_boolean) {
 
 std::unique_ptr<Expression> BinaryOp::make_expression_compat(
     StatementSubstitution &statements_added) {
-    auto tmp = left->make_expression_compat(statements_added);
-    if (tmp) {
-        left = std::move(tmp);
-    }
-    tmp = right->make_expression_compat(statements_added);
-    if (tmp) {
-        right = std::move(tmp);
-    }
+    replace_if_valid(left, left->make_expression_compat(statements_added));
+    replace_if_valid(right, right->make_expression_compat(statements_added));
     std::cout << "make_expression_compat invoked\n";
     if (op == BinaryOperator::NOT_EQUAL) {
         return std::make_unique<NotOperator>(
@@ -226,6 +220,12 @@ std::unique_ptr<Expression> BinaryOp::make_expression_compat(
                                                                         std::move(right),
                                                                         BinaryOperator::LESS_THAN));
     }
+    return nullptr;
+}
+
+std::unique_ptr<Expression> BinaryOp::conv_name(const std::set<std::string> &args) {
+    replace_if_valid(left, left->conv_name(args));
+    replace_if_valid(right, right->conv_name(args));
     return nullptr;
 }
 

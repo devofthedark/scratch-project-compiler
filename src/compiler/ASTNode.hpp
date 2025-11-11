@@ -52,10 +52,6 @@ public:
     [[nodiscard]] const std::map<std::string, Type> &getVariables() const;
 };
 class ASTNode {
-protected:
-    [[nodiscard]] static std::string generate_id();
-    [[nodiscard]] static std::string depth_prefix(int depth, std::string prefix = "");
-
 public:
     ASTNode() = default;
     ASTNode(const ASTNode &) = default;
@@ -63,7 +59,26 @@ public:
     ASTNode &operator=(const ASTNode &) = default;
     ASTNode &operator=(ASTNode &&) noexcept = default;
     virtual ~ASTNode() = default; // Virtual destructor
-    virtual Type typeCheck(TypeCheckerContext &ctx) const = 0;
-    virtual void print(int depth = 0, std::string prefix = "") = 0;
+    virtual Type typeCheck(TypeCheckerContext &ctx) const;
+    virtual void print(int depth = 0, std::string prefix = "");
     virtual std::string compile(json &work) const;
 };
+
+json num_value(std::string scratch_id);
+inline std::string generate_id() {
+    static int counter = 0;
+    return "id_" + std::to_string(counter++);
+}
+constexpr std::string depth_prefix(int depth, std::string prefix) {
+    if (depth == 0) {
+        return prefix;
+    }
+    return std::string((size_t) (depth - 1) * 4, ' ') + "├── " + prefix;
+}
+
+template <typename T1, typename T2>
+inline void replace_if_valid(std::unique_ptr<T1> &dest, std::unique_ptr<T2> src) {
+    if (src) {
+        dest = std::move(src);
+    }
+}

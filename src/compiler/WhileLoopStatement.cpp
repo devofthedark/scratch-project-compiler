@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "compiler/ASTNode.hpp"
 #include "compiler/NotOperator.hpp"
 #include "compiler/Statement.hpp"
 
@@ -22,20 +23,17 @@ void WhileLoopStatement::print(int depth, std::string prefix) {
     body->print(depth + 1, "Body: ");
 }
 
-StatementSubstitution WhileLoopStatement::make_statement_compat() {
+StatementSubstitution WhileLoopStatement::make_statement_compat(const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables =
                                               body->make_statement_compat().tmp_variables,
                                           .replace_orig = false};
-    auto tmp = condition->make_expression_compat(return_value);
-    if (tmp) {
-        condition = std::move(tmp);
-    }
+    replace_if_valid(condition, condition->conv_name(args));
+    replace_if_valid(condition, condition->make_expression_compat(return_value));
     /* Scratch uses "repeat until" for while loops
        Thus while(a) is equivalant to repeat until(!a)
     */
-    tmp = std::make_unique<NotOperator>(std::move(condition));
-    condition = std::move(tmp);
+    replace_if_valid(condition, std::make_unique<NotOperator>(std::move(condition)));
     return return_value;
 }
 

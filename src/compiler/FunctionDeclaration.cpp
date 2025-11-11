@@ -1,9 +1,14 @@
 #include "FunctionDeclaration.hpp"
 
+#include <cstddef>
+#include <format>
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 
 #include "compiler/ASTNode.hpp"
+#include "compiler/FunctionArgument.hpp"
+#include "compiler/FunctionBody.hpp"
+#include "compiler/Statement.hpp"
 
 FunctionDeclaration::FunctionDeclaration(std::string _name,
                                          std::unique_ptr<BlockStatement> _body,
@@ -40,18 +45,14 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
     }
     // Set return type
     ctx.setExpectedReturnType(returnType);
+    // Add the function to the context
+    ctx.addFunction(name, param_types, returnType);
 
     // Check the function body
     if (body->typeCheck(ctx) == Type::ERROR) {
         return Type::ERROR;
     }
     ctx.setExpectedReturnType(Type::VOID);
-    // Remove the parameters from the context
-    for (const auto &param : parameters) {
-        ctx.removeVariable(param.name);
-    }
-    // Add the function to the context
-    ctx.addFunction(name, param_types, returnType);
 
     return returnType;
 }
@@ -67,4 +68,57 @@ void FunctionDeclaration::print(int depth, std::string prefix) {
     }
     std::cout << "\n";
     body->print(depth + 1, "Body: ");
+}
+
+StatementSubstitution FunctionDeclaration::make_statement_compat(
+    const std::set<std::string> &args) {
+    (void) args;
+    std::set<std::string> rep;
+    for (const auto &param : parameters) {
+        rep.insert(param.name);
+    }
+    auto ret_val = body->make_statement_compat(rep);
+    body = std::make_unique<FunctionBody>(std::move(*body));
+    return ret_val;
+}
+
+std::string FunctionDeclaration::compile(json &work) const {
+    std::string body_id = body->compile(work);
+    std::string prototype_id = generate_id();
+    std::string def_id = generate_id();
+    json argids = json::array();
+    json arg_names = json::array();
+    json inputs = json::object();
+    std::string proccode = name;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        argids.push_back(std::format("arg_{}", i));
+        arg_names.push_back(parameters[i].name);
+        proccode += " %s";
+        std::string tmp = FunctionArgument(parameters[i].name).compile(work);
+        inputs[argids.back()] = json::array({1, tmp});
+        work[tmp]["shadow"] = true;
+    }
+    work[prototype_id] = {{"opcode", "procedures_prototype"},
+                          {"next", nullptr},
+                          {"inputs", inputs},
+                          {"fields", json::object()},
+                          {"shadow", true},
+                          {"topLevel", false},
+                          {"mutation",
+                           {{"tagName", "mutation"},
+                            {"children", json::array()},
+                            {"proccode", proccode},
+                            {"argumentids", argids.dump()},
+                            {"argumentnames", arg_names.dump()},
+                            {"argumentdefaults", "[\"\"]"},
+                            {"warp", "false"}}}};
+    work[def_id] = {{"opcode", "procedures_definition"},
+                    {"next", body_id},
+                    {"inputs", {{"custom_block", json::array({1, prototype_id})}}},
+                    {"fields", json::object()},
+                    {"shadow", false},
+                    {"topLevel", true},
+                    {"x", 0},
+                    {"y", 0}};
+    return "";
 }

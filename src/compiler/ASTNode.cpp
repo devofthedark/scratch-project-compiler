@@ -1,4 +1,8 @@
 #include "ASTNode.hpp"
+
+#include <iostream>
+#include <stdexcept>
+#include <utility>
 void TypeCheckerContext::addVariable(const std::string &name, Type type) {
     variables[name] = type;
 }
@@ -36,17 +40,26 @@ Type TypeCheckerContext::getExpectedReturnType() const {
 const std::map<std::string, Type> &TypeCheckerContext::getVariables() const {
     return variables;
 }
-std::string ASTNode::depth_prefix(int depth, std::string prefix) {
-    if (depth == 0) {
-        return prefix;
-    }
-    return std::string((size_t) (depth - 1) * 4, ' ') + "├── " + prefix;
-}
-std::string ASTNode::generate_id() {
-    static int counter = 0;
-    return "id_" + std::to_string(counter++);
+
+void ASTNode::print(int depth, std::string prefix) {
+    std::cout << depth_prefix(depth, std::move(prefix)) << "Unknown ASTNode\n";
 }
 std::string ASTNode::compile(json &work) const {
     (void) work; // suppress unused parameter warning
     throw std::runtime_error("compile() not implemented for this ASTNode");
+}
+
+json num_value(std::string scratch_id) {
+    if (scratch_id[0] == '[' && scratch_id[1] == '4') {
+        return json::array({1, json::parse(scratch_id)});
+    }
+    if (scratch_id[0] == '[' && scratch_id[1] == '1') {
+        return json::array({3, json::parse(scratch_id), json::array({4, "0"})});
+    }
+    return json::array({3, scratch_id, json::array({4, "0"})});
+}
+
+Type ASTNode::typeCheck(TypeCheckerContext &ctx) const {
+    (void) ctx;
+    throw std::runtime_error("what");
 }

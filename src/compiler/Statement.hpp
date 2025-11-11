@@ -1,4 +1,6 @@
 #pragma once
+#include <set>
+
 #include "ASTNode.hpp"
 
 class Statement;
@@ -11,5 +13,5 @@ struct StatementSubstitution {
 
 class Statement : virtual public ASTNode {
 public:
-    virtual StatementSubstitution make_statement_compat();
+    virtual StatementSubstitution make_statement_compat(const std::set<std::string> &args = {});
 };

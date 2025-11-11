@@ -33,19 +33,16 @@ void IfStatement::print(int depth, std::string prefix) {
     }
 }
 
-StatementSubstitution IfStatement::make_statement_compat() {
+StatementSubstitution IfStatement::make_statement_compat(const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables =
                                               trueBlock->make_statement_compat().tmp_variables,
                                           .replace_orig = false};
     if (falseBlock) {
-        return_value.tmp_variables =
-            std::max(return_value.tmp_variables, falseBlock->make_statement_compat().tmp_variables);
+        return_value.tmp_variables += falseBlock->make_statement_compat(args).tmp_variables;
     }
-    auto tmp = condition->make_expression_compat(return_value);
-    if (tmp) {
-        condition = std::move(tmp);
-    }
+    replace_if_valid(condition, condition->conv_name(args));
+    replace_if_valid(condition, condition->conv_name(args));
     return return_value;
 }
 
@@ -60,7 +57,6 @@ std::string IfStatement::compile(json &work) const {
                    {"fields", json::object()},
                    {"next", nullptr},
                    {"topLevel", false},
-                   {"shadow", false},
-                   {"id", if_id}};
+                   {"shadow", false}};
     return if_id;
 }
