@@ -12,6 +12,7 @@ enum class TokenType : uint8_t {
     RETURN,
     NUM,
     STR,
+    EXTERNCALL,
     // Identifiers and Literals
     IDENTIFIER,
     LITERAL_NUMBER,
@@ -40,7 +41,9 @@ enum class TokenType : uint8_t {
     LPAREN,
     RPAREN,
     LBRACE,
-    RBRACE
+    RBRACE,
+    LBRACKET,
+    RBRACKET
 };
 
 struct Token {

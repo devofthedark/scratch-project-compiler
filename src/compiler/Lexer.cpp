@@ -9,7 +9,7 @@
 static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
 static const std::set<std::string> OPERATORS = {
     "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%", "!"};
-static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ','};
+static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ',', '[', ']'};
 namespace {
 bool is_operator_char(char chr) {
     return std::string("+-*/=<>!%|&").find(chr) != std::string::npos;
@@ -88,6 +88,9 @@ Token keyiden_to_token(const std::string &cur_token, int line_number) {
     if (cur_token == "return") {
         return {.type = TokenType::RETURN, .value = cur_token, .line = line_number};
     }
+    if (cur_token == "externcall") {
+        return {.type = TokenType::EXTERNCALL, .value = cur_token, .line = line_number};
+    }
     return {.type = TokenType::IDENTIFIER, .value = cur_token, .line = line_number};
 }
 
@@ -115,6 +118,14 @@ Token punctuation_to_token(char cur_token, int line_number) {
                     .line = line_number};
         case ',':
             return {.type = TokenType::COMMA,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case '[':
+            return {.type = TokenType::LBRACKET,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
+        case ']':
+            return {.type = TokenType::RBRACKET,
                     .value = std::string(1, cur_token),
                     .line = line_number};
         default:
