@@ -114,6 +114,10 @@ Token punctuation_to_token(char cur_token, int line_number) {
             return {.type = TokenType::RBRACE,
                     .value = std::string(1, cur_token),
                     .line = line_number};
+        case ',':
+            return {.type = TokenType::COMMA,
+                    .value = std::string(1, cur_token),
+                    .line = line_number};
         default:
             throw std::runtime_error(
                 std::format("How... How'd you even get here? ({}:{})", __FILE_NAME__, __LINE__));
