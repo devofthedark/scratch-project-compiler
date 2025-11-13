@@ -12,10 +12,6 @@ void new_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();
     // read config.json into a Projectconfig object
     std::ifstream ifs(current_dir / "config.json");
-    if (!ifs) {
-        std::cerr << "Error: cannot open config.json\n";
-        std::exit(1);
-    }
     json json_data;
     ifs >> json_data;
     ProjectConfig config = json_data.get<ProjectConfig>();
@@ -34,28 +30,16 @@ void new_sprite(std::string name) {
     // create the sounds directory
     std::filesystem::create_directory(current_dir / name / "sounds");
     // create the script.scratch file
-    std::ofstream ofs(current_dir / name / "script.scratch");
-    if (!ofs) {
-        std::cerr << "Error: cannot create script.scratch\n";
-        std::exit(1);
-    }
+    std::ofstream ofs(current_dir / name / "script.spc");
     ofs.close();
     // create the config.json file
     std::ofstream ofs2(current_dir / name / "config.json");
-    if (!ofs2) {
-        std::cerr << "Error: cannot create config.json\n";
-        std::exit(1);
-    }
     ofs2 << std::setw(4) << json(SpriteConfig(name)) << '\n';
     ofs2.close();
     // add the sprite to the project config
     config.sprites.push_back(name);
     // write the project config back to the file
     std::ofstream ofs3(current_dir / "config.json");
-    if (!ofs3) {
-        std::cerr << "Error: cannot open config.json\n";
-        std::exit(1);
-    }
     ofs3 << std::setw(4) << json(config) << '\n';
     ofs3.close();
     std::cout << std::format("Sprite {} created\n", name);
@@ -64,10 +48,6 @@ void delete_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();
     // read config.json into a Projectconfig object
     std::ifstream ifs(current_dir / "config.json");
-    if (!ifs) {
-        std::cerr << "Error: cannot open config.json\n";
-        std::exit(1);
-    }
     json json_data;
     ifs >> json_data;
     ProjectConfig config = json_data.get<ProjectConfig>();
@@ -90,10 +70,6 @@ void delete_sprite(std::string name) {
 
     // write the project config back to the file
     std::ofstream ofs(current_dir / "config.json");
-    if (!ofs) {
-        std::cerr << "Error: cannot open config.json\n";
-        std::exit(1);
-    }
     ofs << std::setw(4) << json(config) << '\n';
     ofs.close();
 

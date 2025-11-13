@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-project(cilc VERSION "0.0.1"
+project(spc VERSION "0.0.1"
              LANGUAGES CXX
-             DESCRIPTION "The Scratch Compiler")
+             DESCRIPTION "The Scratch Project Compiler")
 set(VERSION_SUFFEX "-dev1")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -63,8 +63,8 @@ set(SCOURCES
     "${SRC_DIR}/exceptions/LanguageErrors.cpp"
     )
 
-add_executable(scratchc ${SCOURCES})
-target_include_directories(scratchc PRIVATE "${SRC_DIR}")
-target_link_libraries(scratchc PRIVATE argparse
+add_executable(spc ${SCOURCES})
+target_include_directories(spc PRIVATE "${SRC_DIR}")
+target_link_libraries(spc PRIVATE argparse
     nlohmann_json::nlohmann_json magic_enum)
     

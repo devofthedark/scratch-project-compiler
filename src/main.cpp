@@ -101,17 +101,14 @@ int main(int argc, char *argv[]) {
         std::cerr << std::format("Error: no command given\n{}\n", program);
         // std::exit(1);
     }
+
+    // Are we in a project directory?
+    if (!is_project()) {
+        return 0;
+    }
     std::vector<Token> tokens = tokenize("test.txt");
-    // fmt::println("Tokens:");
-    // for (const auto &token : tokens) {
-    //     fmt::println("{}: {} (line {})", magic_enum::enum_name(token.type),
-    //                  token.value, token.line);
-    // }
     BlockStatement ast = parse_tokens(tokens.begin(), tokens.end());
     ast.print();
     TypeCheckerContext ctx;
-    // auto check = AST.typeCheck(ctx);
-    // fmt::println("AST Type Check Result: {}", magic_enum::enum_name(check));
     auto tmp = compile_project(ctx, ast);
-    // std::cout << std::format("Compiled JSON:\n{}\n", tmp.dump(4));
 }
