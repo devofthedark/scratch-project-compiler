@@ -27,6 +27,7 @@ struct SpriteConfig {
     std::string rotation_style = "all around";
     std::map<std::string, CostumeConfig> costumes;
     explicit SpriteConfig(std::string _name) : name(std::move(_name)) {}
+    SpriteConfig() = default;
 };
 struct ProjectConfig {
     std::vector<std::string> sprites;

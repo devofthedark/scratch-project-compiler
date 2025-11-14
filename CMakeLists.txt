@@ -18,20 +18,23 @@ include(FetchContent)
 FetchContent_Declare(
     argparse
     GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+    GIT_TAG 3eda91b2e1ce7d569f84ba295507c4cd8fd96910 # v3.2.0
 )
 FetchContent_MakeAvailable(argparse)
 
 FetchContent_Declare(json 
     GIT_REPOSITORY https://github.com/nlohmann/json
-    GIT_TAG 697c7e557c84c37e88beca4eb591e4ac7b0598b8)
+    GIT_TAG 55f93686c01528224f448c19128836e7df245f72 # v3.12.0
+)
 FetchContent_MakeAvailable(json)
 
 FetchContent_Declare(
     magic_enum
     GIT_REPOSITORY https://github.com/Neargye/magic_enum
-    GIT_TAG a413fcc9c46a020a746907136a384c227f3cd095
+    GIT_TAG e046b69a3736d314fad813e159b1c192eaef92cd # v0.9.7
 )
 FetchContent_MakeAvailable(magic_enum)
+
 set(SCOURCES
     "${SRC_DIR}/main.cpp"
     "${SRC_DIR}/compile.cpp"
@@ -61,6 +64,8 @@ set(SCOURCES
     "${SRC_DIR}/compiler/VariableExpression.cpp"
     "${SRC_DIR}/compiler/WhileLoopStatement.cpp"
     "${SRC_DIR}/exceptions/LanguageErrors.cpp"
+    "${SRC_DIR}/utility/md5.cpp"
+    "${SRC_DIR}/utility/file_utils.cpp"
     )
 
 add_executable(spc ${SCOURCES})

@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     std::string dirname;
     std::string sprite_name;
 
-    argparse::ArgumentParser program("sratchc", VERSION, argparse::default_arguments::help);
+    argparse::ArgumentParser program("spc", VERSION, argparse::default_arguments::help);
     program.add_description(DESCRIPTION);
 
     program.add_argument("-v", "--version")
