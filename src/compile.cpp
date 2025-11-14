@@ -1,8 +1,6 @@
 #include "compile.hpp"
 
-#include <filesystem>
 #include <format>
-#include <fstream>
 #include <iostream>
 
 #include "management/config.hpp"

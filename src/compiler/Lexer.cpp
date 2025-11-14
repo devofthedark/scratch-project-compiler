@@ -1,11 +1,11 @@
 #include "Lexer.hpp"
 
 #include <format>
-#include <fstream>
 #include <set>
 #include <stdexcept>
 
 #include "exceptions/LanguageErrors.hpp"
+#include "utility/file_utils.hpp"
 
 static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
 static const std::set<std::string> OPERATORS = {
@@ -221,10 +221,7 @@ void process_line(std::vector<Token> &tokens, std::string line, int line_number)
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 std::vector<Token> tokenize(const std::string &source_file) {
     std::vector<Token> tokens;
-    std::ifstream file(source_file);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + source_file);
-    }
+    std::ifstream file = file_utils::open_file(source_file);
     std::string line;
     int line_number = 0;
     while (std::getline(file, line)) {
