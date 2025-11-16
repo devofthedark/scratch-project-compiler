@@ -15,9 +15,10 @@ struct SpriteConfig {
     std::string default_costume;
     double starting_x = 0;
     double starting_y = 0;
-    double starting_rotation = 0;
+    // NOLINTNEXTLINE(readability-magic-numbers, cppcoreguidelines-avoid-magic-numbers)
+    double starting_rotation = 90;
     double starting_scale = 1;
-    int layer = 0;
+    int layer = 1;
     // NOLINTBEGIN(readability-magic-numbers, cppcoreguidelines-avoid-magic-numbers)
     double volume = 100;
     double size = 100;
@@ -32,6 +33,7 @@ struct SpriteConfig {
 struct ProjectConfig {
     std::vector<std::string> sprites;
     std::vector<std::string> sounds;
+    std::map<std::string, CostumeConfig> costumes;
     std::string default_costume;
     ProjectConfig() : sprites({}) {}
 };
@@ -54,5 +56,5 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SpriteConfig,
                                    draggable,
                                    rotation_style,
                                    costumes);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectConfig, sprites, sounds, default_costume);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectConfig, sprites, sounds, costumes, default_costume);
 // NOLINTEND(modernize-use-constraints)

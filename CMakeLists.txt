@@ -14,26 +14,55 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXXOPT} ${CXXWARN}")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 configure_file("${SRC_DIR}/version.h.in" "${SRC_DIR}/version.h" @ONLY)
 include_directories(${PROJECT_BINARY_DIR}/src)
+
+separate_arguments(CXXOPT)
 include(FetchContent)
+Set(FETCHCONTENT_QUIET FALSE)
+
+message(STATUS "Fetching dependencies...")
+
+message(STATUS "Fetching p-ranav/argparse...")
 FetchContent_Declare(
     argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+    GIT_REPOSITORY https://github.com/p-ranav/argparse
     GIT_TAG 3eda91b2e1ce7d569f84ba295507c4cd8fd96910 # v3.2.0
+    GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(argparse)
 
+message(STATUS "Fetching nlohmann/json...")
 FetchContent_Declare(json 
     GIT_REPOSITORY https://github.com/nlohmann/json
     GIT_TAG 55f93686c01528224f448c19128836e7df245f72 # v3.12.0
+    GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(json)
 
+message(STATUS "Fetching Neargye/magic_enum...")
 FetchContent_Declare(
     magic_enum
     GIT_REPOSITORY https://github.com/Neargye/magic_enum
     GIT_TAG e046b69a3736d314fad813e159b1c192eaef92cd # v0.9.7
+    GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(magic_enum)
+
+message(STATUS "Fetching richgel999/miniz...")
+FetchContent_Declare(
+    miniz
+    GIT_REPOSITORY https://github.com/richgel999/miniz
+    GIT_TAG 174573d60290f447c13a2b1b3405de2b96e27d6c # 3.0.2
+    GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(miniz)
+
+target_compile_options(miniz PRIVATE
+    $<$<CXX_COMPILER_ID:GNU>:-w>
+    $<$<CXX_COMPILER_ID:Clang>:-w>
+    $<$<CXX_COMPILER_ID:MSVC>:/W0>
+    ${CXXOPT}
+)
 
 set(SCOURCES
     "${SRC_DIR}/main.cpp"
@@ -70,6 +99,9 @@ set(SCOURCES
 
 add_executable(spc ${SCOURCES})
 target_include_directories(spc PRIVATE "${SRC_DIR}")
+target_include_directories(spc SYSTEM PRIVATE
+    $<TARGET_PROPERTY:miniz,INTERFACE_INCLUDE_DIRECTORIES>
+)
 target_link_libraries(spc PRIVATE argparse
-    nlohmann_json::nlohmann_json magic_enum)
+    nlohmann_json::nlohmann_json magic_enum miniz)
     

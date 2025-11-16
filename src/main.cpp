@@ -4,8 +4,6 @@
 #include <sstream>
 
 #include "compile.hpp"
-#include "compiler/Lexer.hpp"
-#include "compiler/Parser.hpp"
 #include "management/project.hpp"
 #include "management/sprites.hpp"
 #include "strings.hpp"
@@ -102,13 +100,5 @@ int main(int argc, char *argv[]) {
         // std::exit(1);
     }
 
-    // Are we in a project directory?
-    if (!is_project()) {
-        return 0;
-    }
-    std::vector<Token> tokens = tokenize("test.txt");
-    BlockStatement ast = parse_tokens(tokens.begin(), tokens.end());
-    ast.print();
-    TypeCheckerContext ctx;
-    auto tmp = compile_project(ctx, ast);
+    compile();
 }
