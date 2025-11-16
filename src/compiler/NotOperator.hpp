@@ -1,7 +1,5 @@
-#include <memory>
-
+#pragma once
 #include "Expression.hpp"
-#include "compiler/ASTNode.hpp"
 
 class NotOperator : public Expression {
 private:

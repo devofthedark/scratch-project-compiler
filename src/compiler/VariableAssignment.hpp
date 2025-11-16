@@ -1,8 +1,6 @@
 #pragma once
-#include <memory>
-
 #include "Expression.hpp"
-#include "Statement.hpp"
+
 class VariableAssignment : public Statement {
 protected:
     // Design is intentional, stop clang-tidy from complaining

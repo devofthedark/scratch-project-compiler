@@ -1,8 +1,5 @@
 #pragma once
 #include <nlohmann/json.hpp>
-#include <string>
-#include <utility>
-#include <vector>
 // The following are basically structs for serializing and deserializing JSON
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
 struct CostumeConfig {

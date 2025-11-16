@@ -1,10 +1,5 @@
 #pragma once
-#include <sys/types.h>
-
-#include <map>
 #include <nlohmann/json.hpp>
-#include <string>
-#include <vector>
 using json = nlohmann::json;
 enum class Type : uint8_t {
     DOUBLE,

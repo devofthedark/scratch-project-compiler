@@ -1,4 +1,6 @@
+#pragma once
 #include "VariableAssignment.hpp"
+
 class VariableDeclaration : public VariableAssignment {
 private:
     Type type;

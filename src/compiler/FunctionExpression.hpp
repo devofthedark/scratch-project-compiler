@@ -1,7 +1,5 @@
-#include <memory>
-
+#pragma once
 #include "Expression.hpp"
-#include "Statement.hpp"
 
 class FunctionExpression : public Expression, public Statement {
 private:

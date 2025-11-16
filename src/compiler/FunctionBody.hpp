@@ -1,8 +1,5 @@
 #pragma once
-#include <memory>
-
 #include "BlockStatement.hpp"
-#include "compiler/Statement.hpp"
 
 class FunctionBody : public BlockStatement {
 public:

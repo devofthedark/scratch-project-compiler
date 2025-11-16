@@ -1,6 +1,6 @@
+#pragma once
 #include "BlockStatement.hpp"
 #include "Expression.hpp"
-#include "compiler/Statement.hpp"
 
 class IfStatement : public Statement {
 private:

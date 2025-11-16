@@ -1,8 +1,6 @@
 #include "ASTNode.hpp"
 
 #include <iostream>
-#include <stdexcept>
-#include <utility>
 void TypeCheckerContext::addVariable(const std::string &name, Type type) {
     variables[name] = type;
 }

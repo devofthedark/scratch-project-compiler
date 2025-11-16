@@ -1,7 +1,6 @@
 #pragma once
-#include <memory>
-
 #include "Expression.hpp"
+
 class VariableExpression : public Expression {
 private:
     std::string name;

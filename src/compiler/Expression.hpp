@@ -1,5 +1,4 @@
 #pragma once
-#include "ASTNode.hpp"
 #include "Statement.hpp"
 class Expression : virtual public ASTNode {
 public:

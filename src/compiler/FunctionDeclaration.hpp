@@ -1,6 +1,5 @@
+#pragma once
 #include "BlockStatement.hpp"
-#include "compiler/ASTNode.hpp"
-#include "compiler/Statement.hpp"
 
 struct Parameter {
     std::string name;

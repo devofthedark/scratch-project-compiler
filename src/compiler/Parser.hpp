@@ -1,3 +1,4 @@
+#pragma once
 #include "BlockStatement.hpp"
 #include "Lexer.hpp"
 

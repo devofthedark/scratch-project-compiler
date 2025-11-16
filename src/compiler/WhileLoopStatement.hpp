@@ -1,8 +1,7 @@
-#include <memory>
-
+#pragma once
 #include "BlockStatement.hpp"
 #include "Expression.hpp"
-#include "compiler/Statement.hpp"
+
 class WhileLoopStatement : public Statement {
 private:
     std::unique_ptr<Expression> condition;

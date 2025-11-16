@@ -1,7 +1,5 @@
-#include <memory>
-
+#pragma once
 #include "compiler/Expression.hpp"
-#include "compiler/Statement.hpp"
 
 class ReturnStatement : public Statement {
 private:

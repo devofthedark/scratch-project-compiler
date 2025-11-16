@@ -1,10 +1,7 @@
 #pragma once
 #include <list>
-#include <memory>
-#include <vector>
 
 #include "Statement.hpp"
-#include "compiler/ASTNode.hpp"
 
 class BlockStatement : public Statement {
 protected:
