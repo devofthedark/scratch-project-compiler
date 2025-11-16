@@ -98,6 +98,7 @@ set(SCOURCES
     )
 
 add_executable(spc ${SCOURCES})
+target_precompile_headers(spc PRIVATE "${SRC_DIR}/utility/pch.hpp")
 target_include_directories(spc PRIVATE "${SRC_DIR}")
 target_include_directories(spc SYSTEM PRIVATE
     $<TARGET_PROPERTY:miniz,INTERFACE_INCLUDE_DIRECTORIES>
