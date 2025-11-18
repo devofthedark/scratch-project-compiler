@@ -235,13 +235,14 @@ std::string BinaryOp::compile(json &work) const {
     std::string node_id = generate_id();
     bool is_boolean = is_boolean_operator();
     if (!is_compound_operator()) {
-        work[node_id] = {{"opcode", opcode()},
-                         {"inputs",
-                          {{input_name() + "1", num_value(left_id, is_boolean)},
-                           {input_name() + "2", num_value(right_id, is_boolean)}}},
-                         {"fields", json::object()},
-                         {"topLevel", false},
-                         {"shadow", false}};
+        work[node_id] =
+            json::object({{"opcode", opcode()},
+                          {"inputs",
+                           json::object({{input_name() + "1", num_value(left_id, is_boolean)},
+                                         {input_name() + "2", num_value(right_id, is_boolean)}})},
+                          {"fields", json::object()},
+                          {"topLevel", false},
+                          {"shadow", false}});
     } else {
         // Compound operator handling
         std::string base_node_id = generate_id();
@@ -253,19 +254,20 @@ std::string BinaryOp::compile(json &work) const {
         } else {
             base_opcode = "operator_gt";
         }
-        work[base_node_id] = {{"opcode", base_opcode},
-                              {"inputs",
-                               {{input_name() + "1", num_value(left_id, is_boolean)},
-                                {input_name() + "2", num_value(right_id, is_boolean)}}},
-                              {"fields", json::object()},
-                              {"topLevel", false},
-                              {"shadow", false}};
+        work[base_node_id] =
+            json::object({{"opcode", base_opcode},
+                          {"inputs",
+                           json::object({{input_name() + "1", num_value(left_id, is_boolean)},
+                                         {input_name() + "2", num_value(right_id, is_boolean)}})},
+                          {"fields", json::object()},
+                          {"topLevel", false},
+                          {"shadow", false}});
         // Now create a NOT operator node
-        work[node_id] = {{"opcode", "operator_not"},
-                         {"inputs", {{"OPERAND", {2, base_node_id}}}},
-                         {"fields", json::object()},
-                         {"topLevel", false},
-                         {"shadow", false}};
+        work[node_id] = json::object({{"opcode", "operator_not"},
+                                      {"inputs", json::object({{"OPERAND", {2, base_node_id}}})},
+                                      {"fields", json::object()},
+                                      {"topLevel", false},
+                                      {"shadow", false}});
     }
     return node_id;
 }

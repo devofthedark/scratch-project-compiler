@@ -1,7 +1,6 @@
 #include "Parser.hpp"
 
 #include <format>
-#include <iostream>
 #include <magic_enum/magic_enum.hpp>
 #include <memory>
 #include <stack>

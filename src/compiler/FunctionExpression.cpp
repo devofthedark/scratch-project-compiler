@@ -2,11 +2,7 @@
 
 #include <format>
 #include <iostream>
-#include <memory>
 
-#include "compiler/ASTNode.hpp"
-#include "compiler/Expression.hpp"
-#include "compiler/Statement.hpp"
 #include "compiler/VariableAssignment.hpp"
 #include "compiler/VariableExpression.hpp"
 
@@ -124,16 +120,16 @@ std::string FunctionExpression::compile(json &work) const {
         proccode += " %s";
         inputs[argids.back()] = num_value(args[i]->compile(work));
     }
-    work[call_procedure] = {{"opcode", "procedures_call"},
-                            {"inputs", inputs},
-                            {"fields", json::object()},
-                            {"shadow", false},
-                            {"topLevel", false},
-                            {"mutation",
-                             {{"tagName", "mutation"},
-                              {"children", json::array()},
-                              {"proccode", proccode},
-                              {"argumentids", argids.dump()},
-                              {"warp", "false"}}}};
+    work[call_procedure] = json::object({{"opcode", "procedures_call"},
+                                         {"inputs", inputs},
+                                         {"fields", json::object()},
+                                         {"shadow", false},
+                                         {"topLevel", false},
+                                         {"mutation",
+                                          json::object({{"tagName", "mutation"},
+                                                        {"children", json::array()},
+                                                        {"proccode", proccode},
+                                                        {"argumentids", argids.dump()},
+                                                        {"warp", "false"}})}});
     return call_procedure;
 }

@@ -2,9 +2,6 @@
 
 #include <iostream>
 
-#include "compiler/ASTNode.hpp"
-#include "compiler/Statement.hpp"
-
 IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
                          std::unique_ptr<BlockStatement> _trueBlock,
                          std::unique_ptr<BlockStatement> _falseBlock)
@@ -51,13 +48,13 @@ std::string IfStatement::compile(json &work) const {
     std::string condition_id = condition->compile(work);
     std::string true_id = trueBlock->compile(work);
     std::string if_id = generate_id();
-    work[if_id] = {{"opcode", "control_if"},
-                   {"inputs",
-                    {{"CONDITION", json::array({2, condition_id})},
-                     {"SUBSTACK", json::array({2, true_id})}}},
-                   {"fields", json::object()},
-                   {"next", nullptr},
-                   {"topLevel", false},
-                   {"shadow", false}};
+    work[if_id] = json::object({{"opcode", "control_if"},
+                                {"inputs",
+                                 json::object({{"CONDITION", json::array({2, condition_id})},
+                                               {"SUBSTACK", json::array({2, true_id})}})},
+                                {"fields", json::object()},
+                                {"next", nullptr},
+                                {"topLevel", false},
+                                {"shadow", false}});
     return if_id;
 }

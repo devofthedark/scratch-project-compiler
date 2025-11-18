@@ -7,6 +7,7 @@
 #include "config.hpp"
 #include "strings.hpp"
 #include "utility/file_utils.hpp"
+
 using json = nlohmann::json;
 void new_sprite(std::string name) {
     std::filesystem::path current_dir = std::filesystem::current_path();

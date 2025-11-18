@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
-#include <utility>
+
 VariableDeclaration::VariableDeclaration(std::string _name,
                                          std::unique_ptr<Expression> _value,
                                          Type _type)

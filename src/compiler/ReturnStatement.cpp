@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-#include "compiler/ASTNode.hpp"
-#include "compiler/Statement.hpp"
 #include "compiler/VariableAssignment.hpp"
 
 ReturnStatement::ReturnStatement(std::unique_ptr<Expression> _return_value)
@@ -42,13 +40,15 @@ StatementSubstitution ReturnStatement::make_statement_compat(const std::set<std:
 
 std::string ReturnStatement::compile(json &work) const {
     std::string stop_id = generate_id();
-    work[stop_id] = {
-        {"opcode", "control_stop"},
-        {"next", nullptr},
-        {"inputs", json::object()},
-        {"fields", {{"STOP_OPTION", json::array({"this script", nullptr})}}},
-        {"shadow", false},
-        {"topLevel", false},
-        {"mutation", {{"tagname", "mutation"}, {"children", json::array()}, {"hasnext", "false"}}}};
+    work[stop_id] = json::object(
+        {{"opcode", "control_stop"},
+         {"next", nullptr},
+         {"inputs", json::object()},
+         {"fields", json::object({{"STOP_OPTION", json::array({"this script", nullptr})}})},
+         {"shadow", false},
+         {"topLevel", false},
+         {"mutation",
+          json::object(
+              {{"tagname", "mutation"}, {"children", json::array()}, {"hasnext", "false"}})}});
     return stop_id;
 }

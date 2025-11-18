@@ -1,14 +1,11 @@
 #include "FunctionDeclaration.hpp"
 
-#include <cstddef>
 #include <format>
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 
-#include "compiler/ASTNode.hpp"
 #include "compiler/FunctionArgument.hpp"
 #include "compiler/FunctionBody.hpp"
-#include "compiler/Statement.hpp"
 
 FunctionDeclaration::FunctionDeclaration(std::string _name,
                                          std::unique_ptr<BlockStatement> _body,
@@ -101,27 +98,28 @@ std::string FunctionDeclaration::compile(json &work) const {
         inputs[argids.back()] = json::array({1, tmp});
         work[tmp]["shadow"] = true;
     }
-    work[prototype_id] = {{"opcode", "procedures_prototype"},
-                          {"next", nullptr},
-                          {"inputs", inputs},
-                          {"fields", json::object()},
-                          {"shadow", true},
-                          {"topLevel", false},
-                          {"mutation",
-                           {{"tagName", "mutation"},
-                            {"children", json::array()},
-                            {"proccode", proccode},
-                            {"argumentids", argids.dump()},
-                            {"argumentnames", arg_names.dump()},
-                            {"argumentdefaults", "[\"\"]"},
-                            {"warp", "false"}}}};
-    work[def_id] = {{"opcode", "procedures_definition"},
-                    {"next", body_id},
-                    {"inputs", {{"custom_block", json::array({1, prototype_id})}}},
-                    {"fields", json::object()},
-                    {"shadow", false},
-                    {"topLevel", true},
-                    {"x", 0},
-                    {"y", 0}};
+    work[prototype_id] = json::object({{"opcode", "procedures_prototype"},
+                                       {"next", nullptr},
+                                       {"inputs", inputs},
+                                       {"fields", json::object()},
+                                       {"shadow", true},
+                                       {"topLevel", false},
+                                       {"mutation",
+                                        json::object({{"tagName", "mutation"},
+                                                      {"children", json::array()},
+                                                      {"proccode", proccode},
+                                                      {"argumentids", argids.dump()},
+                                                      {"argumentnames", arg_names.dump()},
+                                                      {"argumentdefaults", "[\"\"]"},
+                                                      {"warp", "false"}})}});
+    work[def_id] =
+        json::object({{"opcode", "procedures_definition"},
+                      {"next", body_id},
+                      {"inputs", json::object({{"custom_block", json::array({1, prototype_id})}})},
+                      {"fields", json::object()},
+                      {"shadow", false},
+                      {"topLevel", true},
+                      {"x", 0},
+                      {"y", 0}});
     return "";
 }

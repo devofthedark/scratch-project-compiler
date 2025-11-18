@@ -2,9 +2,7 @@
 
 #include <iostream>
 
-#include "compiler/ASTNode.hpp"
 #include "compiler/NotOperator.hpp"
-#include "compiler/Statement.hpp"
 
 WhileLoopStatement::WhileLoopStatement(std::unique_ptr<Expression> _condition,
                                        std::unique_ptr<BlockStatement> _body)
@@ -42,9 +40,12 @@ std::string WhileLoopStatement::compile(json &work) const {
     std::string body_id = body->compile(work);
     // Scratch uses "repeat until" for while loops, the preprocessing required is done
     std::string node_id = generate_id();
-    work[node_id] = {{"opcode", "control_repeat_until"},
-                     {"inputs", {{"CONDITION", {2, condition_id}}, {"SUBSTACK", {2, body_id}}}},
-                     {"fields", json::object()},
-                     {"topLevel", false}};
+    work[node_id] =
+        json::object({{"opcode", "control_repeat_until"},
+                      {"inputs",
+                       json::object({json::object({"CONDITION", json::array({2, condition_id})}),
+                                     json::object({"SUBSTACK", json::array({2, body_id})})})},
+                      {"fields", json::object()},
+                      {"topLevel", false}});
     return node_id;
 }

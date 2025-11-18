@@ -4,8 +4,8 @@
 #include <iostream>
 
 #include "config.hpp"
-#include "strings.hpp"
 #include "utility/file_utils.hpp"
+
 template <> struct std::formatter<std::filesystem::path> : std::formatter<std::string> {};
 using json = nlohmann::json;
 void new_project(const std::string &dir) {

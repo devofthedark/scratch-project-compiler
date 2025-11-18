@@ -2,7 +2,6 @@
 
 #include <format>
 #include <set>
-#include <stdexcept>
 
 #include "exceptions/LanguageErrors.hpp"
 #include "utility/file_utils.hpp"
