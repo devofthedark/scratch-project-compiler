@@ -33,7 +33,7 @@ void IfStatement::print(int depth, std::string prefix) {
 StatementSubstitution IfStatement::make_statement_compat(const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables =
-                                              trueBlock->make_statement_compat().tmp_variables,
+                                              trueBlock->make_statement_compat(args).tmp_variables,
                                           .replace_orig = false};
     if (falseBlock) {
         return_value.tmp_variables = std::max(falseBlock->make_statement_compat(args).tmp_variables,

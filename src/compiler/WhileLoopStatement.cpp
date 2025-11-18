@@ -24,7 +24,7 @@ void WhileLoopStatement::print(int depth, std::string prefix) {
 StatementSubstitution WhileLoopStatement::make_statement_compat(const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables =
-                                              body->make_statement_compat().tmp_variables,
+                                              body->make_statement_compat(args).tmp_variables,
                                           .replace_orig = false};
     replace_if_valid(condition, condition->conv_name(args));
     replace_if_valid(condition, condition->make_expression_compat(return_value));
