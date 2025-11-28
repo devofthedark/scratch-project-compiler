@@ -363,7 +363,10 @@ std::unique_ptr<FunctionExpression> parse_function_call(std::vector<Token>::cons
             begin = it;
         }
     }
-    arguments.push_back(parse_equation(begin + 1, end - 1));
+    auto tmp = parse_equation(begin + 1, end - 1);
+    if (tmp) {
+        arguments.push_back(std::move(tmp));
+    }
     auto res = std::make_unique<FunctionExpression>(func_name, std::move(arguments));
     // res->print(0, "Function Call Expression: ");
     return res;
@@ -491,6 +494,9 @@ std::unique_ptr<Expression> parse_equation(std::vector<Token>::const_iterator be
             output.pop();
             output.push(std::make_unique<NotOperator>(std::move(operand)));
         }
+    }
+    if (output.empty()) {
+        return nullptr;
     }
     if (output.size() != 1) {
         throw SyntaxError("Error parsing expression", begin->line);
