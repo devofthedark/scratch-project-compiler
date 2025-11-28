@@ -1,10 +1,15 @@
 #pragma once
+#include "BlockStatement.hpp"
 #include "Expression.hpp"
 
 class FunctionExpression : public Expression, public Statement {
 private:
     std::string name;
     std::vector<std::unique_ptr<Expression>> args;
+    std::shared_ptr<BlockStatement> implementation = nullptr;
+    bool is_void_stdcall_hook = false;
+    bool is_return_stdcall_hook = false;
+    bool is_stdcall_call = false;
 
 public:
     FunctionExpression(std::string name, std::vector<std::unique_ptr<Expression>> args);
@@ -13,7 +18,7 @@ public:
     ~FunctionExpression() override = default;
     FunctionExpression(FunctionExpression &&other) noexcept = default;
     FunctionExpression &operator=(FunctionExpression &&other) noexcept = default;
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     [[nodiscard]] const std::string &getName() const;
     [[nodiscard]] const std::vector<std::unique_ptr<Expression>> &getArgs() const;
     std::vector<Type> getArgTypes(TypeCheckerContext &ctx) const;

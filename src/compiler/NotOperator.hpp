@@ -7,7 +7,7 @@ private:
 
 public:
     explicit NotOperator(std::unique_ptr<Expression> operand);
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     void print(int depth = 0, std::string prefix = "") override;
     std::unique_ptr<Expression> make_expression_compat(
         StatementSubstitution &statements_added) override;

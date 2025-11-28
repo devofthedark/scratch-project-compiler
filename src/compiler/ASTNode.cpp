@@ -1,14 +1,20 @@
 #include "ASTNode.hpp"
 
 #include <iostream>
+#include <utility>
 void TypeCheckerContext::addVariable(const std::string &name, Type type) {
     variables[name] = type;
 }
 void TypeCheckerContext::addFunction(const std::string &name,
                                      const std::vector<Type> &argTypes,
-                                     Type returnType) {
+                                     Type returnType,
+                                     std::shared_ptr<BlockStatement> implementation,
+                                     bool is_stdcall) {
     FunctionKey key{.name = name, .argTypes = argTypes};
-    functions[key] = {.argTypes = argTypes, .returnType = returnType};
+    functions[key] = {.argTypes = argTypes,
+                      .returnType = returnType,
+                      .implementation = std::move(implementation),
+                      .is_stdcall = is_stdcall};
 }
 Type TypeCheckerContext::lookupVariable(const std::string &name) const {
     auto itr = variables.find(name);
@@ -57,7 +63,7 @@ json num_value(std::string scratch_id) {
     return json::array({3, scratch_id, json::array({4, "0"})});
 }
 
-Type ASTNode::typeCheck(TypeCheckerContext &ctx) const {
+Type ASTNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;
     throw std::runtime_error("what");
 }

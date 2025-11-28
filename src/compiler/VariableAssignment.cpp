@@ -5,7 +5,7 @@
 
 VariableAssignment::VariableAssignment(std::string _name, std::unique_ptr<Expression> _value)
     : name(std::move(_name)), value(std::move(_value)) {}
-Type VariableAssignment::typeCheck(TypeCheckerContext &ctx) const {
+Type VariableAssignment::typeCheck(TypeCheckerContext &ctx) {
     // Check if the variable exists and is the correct type
     Type var_type = ctx.lookupVariable(name);
     if (var_type == Type::ERROR) {

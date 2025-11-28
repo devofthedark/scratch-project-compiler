@@ -9,7 +9,7 @@ VariableDeclaration::VariableDeclaration(std::string _name,
     : VariableAssignment(std::move(_name), std::move(_value)), type(_type) {}
 VariableDeclaration::VariableDeclaration(VariableAssignment &assignment, Type _type)
     : VariableAssignment(std::move(assignment)), type(_type) {}
-Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) const {
+Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) {
     // Check if the variable name is already used
     if (ctx.lookupVariable(name) != Type::ERROR) {
         return Type::ERROR;

@@ -7,7 +7,7 @@
 WhileLoopStatement::WhileLoopStatement(std::unique_ptr<Expression> _condition,
                                        std::unique_ptr<BlockStatement> _body)
     : condition(std::move(_condition)), body(std::move(_body)) {}
-Type WhileLoopStatement::typeCheck(TypeCheckerContext &ctx) const {
+Type WhileLoopStatement::typeCheck(TypeCheckerContext &ctx) {
     // Check the condition
     Type cond_type = condition->typeCheck(ctx);
     if (cond_type != Type::BOOL) {

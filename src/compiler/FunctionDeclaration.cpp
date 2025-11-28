@@ -8,12 +8,13 @@
 #include "compiler/FunctionBody.hpp"
 
 FunctionDeclaration::FunctionDeclaration(std::string _name,
-                                         std::unique_ptr<BlockStatement> _body,
+                                         std::shared_ptr<BlockStatement> _body,
                                          std::vector<Parameter> _parameters,
-                                         Type _returnType)
+                                         Type _returnType,
+                                         bool is_stdcall)
     : name(std::move(_name)), body(std::move(_body)), parameters(std::move(_parameters)),
-      returnType(_returnType) {}
-Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
+      returnType(_returnType), is_stdcall(is_stdcall) {}
+Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) {
     // Check the return type
     if (returnType == Type::ERROR) {
         return Type::ERROR;
@@ -43,7 +44,7 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) const {
     // Set return type
     ctx.setExpectedReturnType(returnType);
     // Add the function to the context
-    ctx.addFunction(name, param_types, returnType);
+    ctx.addFunction(name, param_types, returnType, body, is_stdcall);
 
     // Check the function body
     if (body->typeCheck(ctx) == Type::ERROR) {
@@ -78,11 +79,17 @@ StatementSubstitution FunctionDeclaration::make_statement_compat(
         rep.insert(param.name);
     }
     auto ret_val = body->make_statement_compat(rep);
+    if (is_stdcall) {
+        return ret_val;
+    }
     body = std::make_unique<FunctionBody>(std::move(*body));
     return ret_val;
 }
 
 std::string FunctionDeclaration::compile(json &work) const {
+    if (is_stdcall) {
+        return "";
+    }
     std::string body_id = body->compile(work);
     std::string prototype_id = generate_id();
     std::string def_id = generate_id();

@@ -112,6 +112,22 @@ std::vector<Token>::const_iterator find_matching_rbrace(std::vector<Token>::cons
     return end; // No matching RBRACE found
 }
 
+std::vector<Token>::const_iterator find_matching_rbrack(std::vector<Token>::const_iterator begin,
+                                                        std::vector<Token>::const_iterator end) {
+    int bracket_count = 0;
+    for (auto it = begin; it != end; ++it) {
+        if (it->type == TokenType::LBRACKET) {
+            bracket_count++;
+        } else if (it->type == TokenType::RBRACKET) {
+            bracket_count--;
+            if (bracket_count == 0) {
+                return it;
+            }
+        }
+    }
+    return end; // No matching RBRACE found
+}
+
 /*
 Parses a list of tokens into a BlockStatement (AST)
 
@@ -211,11 +227,22 @@ std::unique_ptr<FunctionDeclaration> parse_function_header(std::vector<Token>::c
         }
         // For now, only DOUBLE return type is supported
         return_type = Type::DOUBLE;
-    } else if (itr != loc + 1) {
+    } else if (itr != loc + 1 && (loc + 1)->type != TokenType::LBRACKET) {
         throw SyntaxError("Unexpected token in function definition", itr->line);
     }
+    if ((loc + 1)->type == TokenType::LBRACKET && find_matching_rbrack(loc + 1, end) != loc + 3) {
+        throw SyntaxError("Internal stdcall error", (loc + 1)->line);
+    }
+    if ((loc + 1)->type == TokenType::LBRACKET && (loc + 2)->type == TokenType::STDCALL) {
+        return std::make_unique<FunctionDeclaration>(name,
+                                                     std::make_shared<BlockStatement>(
+                                                         parse_tokens(loc + 5, end, false)),
+                                                     std::move(parameters),
+                                                     return_type,
+                                                     true);
+    }
     return std::make_unique<FunctionDeclaration>(name,
-                                                 std::make_unique<BlockStatement>(
+                                                 std::make_shared<BlockStatement>(
                                                      parse_tokens(itr + 1, end, false)),
                                                  std::move(parameters),
                                                  return_type);
@@ -414,21 +441,16 @@ void process_operator(std::stack<Token> &operators,
 
 std::unique_ptr<Expression> parse_equation(std::vector<Token>::const_iterator begin,
                                            std::vector<Token>::const_iterator end) {
-    // Parses an equation (expression)
-    // std::cerr << "parse_equation()\n";
-    // For now just print the tokens in the equation
-    for (auto it = begin; it != end; ++it) {
-        // std::cerr << magic_enum::enum_name(it->type) << " ";
-        if (it->type == TokenType::IDENTIFIER || it->type == TokenType::LITERAL_NUMBER) {
-            // std::cerr << "(" << it->value << ") ";
-        }
-    }
     // We use the shunting yard algorithm to parse the equation into an AST
     std::stack<Token> operators;
     std::stack<std::unique_ptr<Expression>> output;
     for (auto it = begin; it != end; ++it) {
         if (it->type == TokenType::LITERAL_NUMBER) {
             output.push(std::make_unique<LiteralNumberNode>(std::stod(it->value)));
+            continue;
+        }
+        if (it->type == TokenType::LITERAL_STRING) {
+            output.push(std::make_unique<LiteralStringNode>(it->value));
             continue;
         }
         if (it->type == TokenType::IDENTIFIER) {

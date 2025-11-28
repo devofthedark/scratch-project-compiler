@@ -12,7 +12,7 @@ enum class TokenType : uint8_t {
     RETURN,
     NUM,
     STR,
-    EXTERNCALL,
+    STDCALL,
     // Identifiers and Literals
     IDENTIFIER,
     LITERAL_NUMBER,

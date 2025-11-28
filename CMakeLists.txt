@@ -6,7 +6,7 @@ set(VERSION_SUFFEX "-dev1")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CXXOPT "-O0 -g")
+set(CXXOPT "-O0 -g3 -fno-omit-frame-pointer -fno-eliminate-unused-debug-types")
 set(CXXWARN "-Wall -Wextra -Werror")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXXOPT} ${CXXWARN}")
@@ -88,6 +88,7 @@ set(SCOURCES
     "${SRC_DIR}/compiler/Parser.cpp"
     "${SRC_DIR}/compiler/ReturnStatement.cpp"
     "${SRC_DIR}/compiler/Statement.cpp"
+    "${SRC_DIR}/compiler/StdcallStatement.cpp"
     "${SRC_DIR}/compiler/VariableAssignment.cpp"
     "${SRC_DIR}/compiler/VariableDeclaration.cpp"
     "${SRC_DIR}/compiler/VariableExpression.cpp"

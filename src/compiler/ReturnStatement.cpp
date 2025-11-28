@@ -7,7 +7,7 @@
 ReturnStatement::ReturnStatement(std::unique_ptr<Expression> _return_value)
     : return_value(std::move(_return_value)) {}
 
-Type ReturnStatement::typeCheck(TypeCheckerContext &ctx) const {
+Type ReturnStatement::typeCheck(TypeCheckerContext &ctx) {
     Type ret_type = return_value->typeCheck(ctx);
     Type expected_type = ctx.getExpectedReturnType();
     if (ret_type == Type::ERROR || expected_type == Type::ERROR) {

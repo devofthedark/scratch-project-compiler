@@ -6,7 +6,7 @@
 
 NotOperator::NotOperator(std::unique_ptr<Expression> operand) : operand(std::move(operand)) {}
 
-Type NotOperator::typeCheck(TypeCheckerContext &ctx) const {
+Type NotOperator::typeCheck(TypeCheckerContext &ctx) {
     if (operand->typeCheck(ctx) != Type::BOOL) {
         return Type::ERROR;
     }

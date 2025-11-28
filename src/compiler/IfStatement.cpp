@@ -7,7 +7,7 @@ IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
                          std::unique_ptr<BlockStatement> _falseBlock)
     : condition(std::move(_condition)), trueBlock(std::move(_trueBlock)),
       falseBlock(std::move(_falseBlock)) {}
-Type IfStatement::typeCheck(TypeCheckerContext &ctx) const {
+Type IfStatement::typeCheck(TypeCheckerContext &ctx) {
     if (condition->typeCheck(ctx) != Type::BOOL) {
         return Type::ERROR;
     }

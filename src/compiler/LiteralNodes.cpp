@@ -3,7 +3,7 @@
 #include <format>
 #include <iostream>
 LiteralNumberNode::LiteralNumberNode(double _value) : value(_value) {}
-Type LiteralNumberNode::typeCheck(TypeCheckerContext &ctx) const {
+Type LiteralNumberNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;
     return Type::DOUBLE;
 }
@@ -27,7 +27,7 @@ std::string LiteralNumberNode::compile(json &work) const {
     return "[4,\"" + clean_to_string() + "\"]";
 }
 LiteralStringNode::LiteralStringNode(const std::string &_value) : value(_value) {}
-Type LiteralStringNode::typeCheck(TypeCheckerContext &ctx) const {
+Type LiteralStringNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;
     return Type::STRING;
 }
@@ -38,7 +38,7 @@ void LiteralStringNode::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "LiteralStringNode( \"" << value << "\" )\n";
 }
 LiteralBoolNode::LiteralBoolNode(bool _value) : value(_value) {}
-Type LiteralBoolNode::typeCheck(TypeCheckerContext &ctx) const {
+Type LiteralBoolNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;
     return Type::BOOL;
 }

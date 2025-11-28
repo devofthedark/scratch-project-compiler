@@ -6,7 +6,8 @@
 #include "exceptions/LanguageErrors.hpp"
 #include "utility/file_utils.hpp"
 
-static const std::set<std::string> KEYWORDS = {"if", "else", "while", "num", "str", "fn", "return"};
+static const std::set<std::string> KEYWORDS = {
+    "if", "else", "while", "num", "str", "fn", "return", "stdcall"};
 static const std::set<std::string> OPERATORS = {
     "+", "-", "*", "/", "=", "==", "!=", ">=", "<=", ">", "<", "->", "&&", "||", "%", "!"};
 static const std::set<char> PUNCTUATION = {'(', ')', '{', '}', ';', ',', '[', ']'};
@@ -88,9 +89,10 @@ Token keyiden_to_token(const std::string &cur_token, int line_number) {
     if (cur_token == "return") {
         return {.type = TokenType::RETURN, .value = cur_token, .line = line_number};
     }
-    if (cur_token == "externcall") {
-        return {.type = TokenType::EXTERNCALL, .value = cur_token, .line = line_number};
+    if (cur_token == "stdcall") {
+        return {.type = TokenType::STDCALL, .value = cur_token, .line = line_number};
     }
+
     return {.type = TokenType::IDENTIFIER, .value = cur_token, .line = line_number};
 }
 
@@ -184,6 +186,32 @@ void parse_operator(std::vector<Token> &tokens,
     tokens.push_back(operator_to_token(current_token, line_number));
 }
 
+void parse_string_literal(std::vector<Token> &tokens,
+                          const std::string &line,
+                          size_t &pos,
+                          int line_number) {
+    std::string current_token;
+    current_token += line[pos++];
+    while (pos < line.length()) {
+        char chr = line[pos++];
+        current_token += chr;
+        if (chr == '"') {
+            break; // closing quote
+        }
+        if (chr == '\\' && pos < line.length()) {
+            // escape character
+            current_token += line[pos++];
+        }
+    }
+    if (current_token.back() != '"') {
+        throw SyntaxError("Unterminated string literal", line_number);
+    }
+    --pos;
+    tokens.push_back({TokenType::LITERAL_STRING,
+                      current_token.substr(1, current_token.size() - 2),
+                      line_number});
+}
+
 void process_line(std::vector<Token> &tokens, std::string line, int line_number) {
     std::string current_token;
     for (size_t pos = 0; pos < line.length(); ++pos) {
@@ -215,6 +243,12 @@ void process_line(std::vector<Token> &tokens, std::string line, int line_number)
         // Operator
         if (is_operator_char(chr)) {
             parse_operator(tokens, line, pos, line_number);
+            continue;
+        }
+
+        // String literal
+        if (chr == '"') {
+            parse_string_literal(tokens, line, pos, line_number);
             continue;
         }
 

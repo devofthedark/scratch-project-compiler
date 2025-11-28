@@ -34,7 +34,7 @@ public:
     [[nodiscard]] const Expression *getLeft() const;
     [[nodiscard]] const Expression *getRight() const;
     [[nodiscard]] BinaryOperator getOperator() const;
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     void print(int depth = 0, std::string prefix = "") override;
     std::unique_ptr<Expression> make_expression_compat(
         StatementSubstitution &statements_added) override;

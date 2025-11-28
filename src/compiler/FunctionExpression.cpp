@@ -1,15 +1,26 @@
 #include "FunctionExpression.hpp"
 
+#include <cstddef>
 #include <format>
 #include <iostream>
 
+#include "compiler/StdcallExpression.hpp"
+#include "compiler/StdcallStatement.hpp"
 #include "compiler/VariableAssignment.hpp"
 #include "compiler/VariableExpression.hpp"
 
 FunctionExpression::FunctionExpression(std::string _name,
                                        std::vector<std::unique_ptr<Expression>> _args)
     : name(std::move(_name)), args(std::move(_args)) {}
-Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) const {
+Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) {
+    if (name == "__scratch_stdcall_hook_void") {
+        is_void_stdcall_hook = true;
+        return Type::VOID;
+    }
+    if (name == "__scratch_stdcall_hook_return") {
+        is_return_stdcall_hook = true;
+        return Type::DOUBLE;
+    }
     // Check if the function exists
     const FunctionSignature *function_sig = ctx.lookupFunction(name, getArgTypes(ctx));
     if (function_sig == nullptr) {
@@ -22,6 +33,14 @@ Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) const {
         if (arg_type != function_sig->argTypes[i]) {
             return Type::ERROR;
         }
+    }
+
+    is_stdcall_call = function_sig->is_stdcall;
+    if (is_stdcall_call) {
+        implementation = function_sig->implementation;
+    }
+    if (implementation) {
+        std::cerr << implementation->size() << " sZ\n";
     }
 
     return function_sig->returnType;
@@ -82,12 +101,20 @@ StatementSubstitution FunctionExpression::make_statement_compat(
             arg = std::move(tmp);
         }
     }
+    if (is_void_stdcall_hook) {
+        return_value.new_statements.emplace_back(
+            std::make_unique<StdcallStatement>(std::move(args)));
+        return_value.replace_orig = true;
+    }
     return return_value;
 }
 std::unique_ptr<Expression> FunctionExpression::make_expression_compat(
     StatementSubstitution &statements_added) {
     for (auto &arg : args) {
         replace_if_valid(arg, arg->make_expression_compat(statements_added));
+    }
+    if (is_return_stdcall_hook) {
+        return std::make_unique<StdcallExpression>(std::move(args), implementation);
     }
     std::string tmp_var_name =
         std::format("__scratch_compiler_tmp_var_{}", statements_added.tmp_variables++);
@@ -110,6 +137,15 @@ std::unique_ptr<Expression> FunctionExpression::conv_name(const std::set<std::st
 }
 
 std::string FunctionExpression::compile(json &work) const {
+    // stdcall handling
+    if (is_stdcall_call) {
+        auto impl = implementation->getFirstStatement();
+        for (const auto &arg : args) {
+            impl->add_arg_to_stdcall(arg->compile(work));
+        }
+        return impl->compile(work);
+    }
+    static_assert(std::is_same_v<decltype(args), std::vector<std::unique_ptr<Expression>>>);
     // Just the procedure_call block, return value has been handled
     std::string call_procedure = generate_id();
     json argids = json::array();

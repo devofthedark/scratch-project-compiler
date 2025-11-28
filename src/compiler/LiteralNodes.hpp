@@ -7,7 +7,7 @@ private:
 
 public:
     explicit LiteralNumberNode(double value);
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     [[nodiscard]] double getValue() const;
     void print(int depth = 0, std::string prefix = "") override;
     std::string compile(json &work) const override;
@@ -18,9 +18,12 @@ private:
 
 public:
     explicit LiteralStringNode(const std::string &value);
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     [[nodiscard]] const std::string &getValue() const;
     void print(int depth = 0, std::string prefix = "") override;
+    std::string str_if_string_literal() override {
+        return std::move(value);
+    }
 };
 class LiteralBoolNode : public Expression {
 private:
@@ -28,7 +31,7 @@ private:
 
 public:
     explicit LiteralBoolNode(bool value);
-    Type typeCheck(TypeCheckerContext &ctx) const override;
+    Type typeCheck(TypeCheckerContext &ctx) override;
     [[nodiscard]] bool getValue() const;
     void print(int depth = 0, std::string prefix = "") override;
 };

@@ -4,7 +4,7 @@
 
 #include "FunctionArgument.hpp"
 VariableExpression::VariableExpression(std::string _name) : name(std::move(_name)) {}
-Type VariableExpression::typeCheck(TypeCheckerContext &ctx) const {
+Type VariableExpression::typeCheck(TypeCheckerContext &ctx) {
     return ctx.lookupVariable(name);
 }
 const std::string &VariableExpression::getName() const {

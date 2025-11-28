@@ -9,7 +9,7 @@
 BlockStatement::BlockStatement(std::vector<std::unique_ptr<Statement>> &_statements)
     : statements(std::make_move_iterator(_statements.begin()),
                  std::make_move_iterator(_statements.end())) {}
-Type BlockStatement::typeCheck(TypeCheckerContext &ctx) const {
+Type BlockStatement::typeCheck(TypeCheckerContext &ctx) {
     for (const auto &stmt : statements) {
         if (stmt->typeCheck(ctx) == Type::ERROR) {
             return Type::ERROR;
@@ -17,9 +17,7 @@ Type BlockStatement::typeCheck(TypeCheckerContext &ctx) const {
     }
     return Type::VOID;
 }
-void BlockStatement::add(std::unique_ptr<Statement> stmt) {
-    statements.push_back(std::move(stmt));
-}
+
 void BlockStatement::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "BlockStatement\n";
     int pos = 0;
@@ -52,6 +50,9 @@ StatementSubstitution BlockStatement::make_statement_compat(const std::set<std::
 std::string BlockStatement::compile(json &work) const {
     std::string last_id;
     for (const auto &statement : std::ranges::reverse_view(statements)) {
+        if (!statement) {
+            continue;
+        }
         std::string stmt_id = statement->compile(work);
         if (stmt_id.empty()) {
             continue;

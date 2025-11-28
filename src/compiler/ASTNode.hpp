@@ -8,9 +8,14 @@ enum class Type : uint8_t {
     VOID, // Used for functions that don't return anything
     ERROR // Not *really* a type, but used for error handling
 };
+
+class BlockStatement;
+class Expression;
 struct FunctionSignature {
     std::vector<Type> argTypes;
     Type returnType;
+    std::shared_ptr<BlockStatement> implementation;
+    bool is_stdcall;
 };
 // Just a data struct
 // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
@@ -37,7 +42,11 @@ private:
 public:
     TypeCheckerContext() = default;
     void addVariable(const std::string &name, Type type);
-    void addFunction(const std::string &name, const std::vector<Type> &argTypes, Type returnType);
+    void addFunction(const std::string &name,
+                     const std::vector<Type> &argTypes,
+                     Type returnType,
+                     std::shared_ptr<BlockStatement> implementation,
+                     bool is_stdcall = false);
     [[nodiscard]] Type lookupVariable(const std::string &name) const;
     [[nodiscard]] const FunctionSignature *lookupFunction(const std::string &name,
                                                           const std::vector<Type> &argTypes) const;
@@ -54,9 +63,16 @@ public:
     ASTNode &operator=(const ASTNode &) = default;
     ASTNode &operator=(ASTNode &&) noexcept = default;
     virtual ~ASTNode() = default; // Virtual destructor
-    virtual Type typeCheck(TypeCheckerContext &ctx) const;
+    virtual Type typeCheck(TypeCheckerContext &ctx);
     virtual void print(int depth = 0, std::string prefix = "");
     virtual std::string compile(json &work) const;
+    [[nodiscard]] virtual bool is_stdcall() const {
+        return false;
+    }
+    // NOLINTNEXTLINE
+    virtual void add_arg_to_stdcall(std::string arg) {
+        (void) arg;
+    }
 };
 
 json num_value(std::string scratch_id);

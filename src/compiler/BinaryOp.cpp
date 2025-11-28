@@ -20,7 +20,7 @@ const Expression *BinaryOp::getRight() const {
 BinaryOperator BinaryOp::getOperator() const {
     return op;
 }
-Type BinaryOp::typeCheck(TypeCheckerContext &ctx) const {
+Type BinaryOp::typeCheck(TypeCheckerContext &ctx) {
     Type left_type = left->typeCheck(ctx);
     Type right_type = right->typeCheck(ctx);
 

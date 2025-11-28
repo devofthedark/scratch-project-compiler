@@ -3,6 +3,7 @@
 
 #include "ASTNode.hpp"
 
+class Expression;
 class Statement;
 
 struct StatementSubstitution {
@@ -14,4 +15,7 @@ struct StatementSubstitution {
 class Statement : virtual public ASTNode {
 public:
     virtual StatementSubstitution make_statement_compat(const std::set<std::string> &args = {});
+    virtual std::unique_ptr<Expression> expr_if_return_statement() {
+        throw std::runtime_error("Not a return statement");
+    }
 };
