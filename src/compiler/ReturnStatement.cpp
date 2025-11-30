@@ -31,6 +31,9 @@ StatementSubstitution ReturnStatement::make_statement_compat(const std::set<std:
     if (return_value) {
         replace_if_valid(return_value, return_value->conv_name(args));
         replace_if_valid(return_value, return_value->make_expression_compat(ret_value));
+        if (return_value->is_stdcall_hook()) {
+            return ret_value;
+        }
         ret_value.new_statements.push_back(
             std::make_unique<VariableAssignment>("__scratch_compiler_function_return_value",
                                                  std::move(return_value)));

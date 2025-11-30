@@ -21,9 +21,10 @@ public:
     Type typeCheck(TypeCheckerContext &ctx) override;
     [[nodiscard]] const std::string &getValue() const;
     void print(int depth = 0, std::string prefix = "") override;
-    std::string str_if_string_literal() override {
-        return std::move(value);
+    [[nodiscard]] const std::string &str_if_string_literal() const override {
+        return value;
     }
+    std::string compile(json &work) const override;
 };
 class LiteralBoolNode : public Expression {
 private:

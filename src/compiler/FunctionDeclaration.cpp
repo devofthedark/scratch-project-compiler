@@ -26,7 +26,7 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) {
     }
 
     // Check the parameters
-    std::vector<Type> param_types(parameters.size());
+    std::vector<Type> param_types;
     for (const auto &param : parameters) {
         if (param.type == Type::ERROR) {
             return Type::ERROR;
@@ -37,6 +37,7 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) {
         }
         // Add the parameter to the context
         ctx.addVariable(param.name, param.type);
+        param_types.push_back(param.type);
     }
     if (ctx.lookupFunction(name, param_types) != nullptr) {
         return Type::ERROR;

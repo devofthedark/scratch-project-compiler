@@ -18,7 +18,7 @@ public:
     [[nodiscard]] size_t size() const {
         return statements.size();
     }
-    [[nodiscard]] std::unique_ptr<Statement> getFirstStatement() {
-        return std::move(statements.front());
+    [[nodiscard]] const std::unique_ptr<Statement> *getFirstStatement() {
+        return &statements.front();
     }
 };

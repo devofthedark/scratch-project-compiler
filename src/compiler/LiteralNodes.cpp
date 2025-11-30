@@ -37,6 +37,10 @@ const std::string &LiteralStringNode::getValue() const {
 void LiteralStringNode::print(int depth, std::string prefix) {
     std::cout << depth_prefix(depth, prefix) << "LiteralStringNode( \"" << value << "\" )\n";
 }
+std::string LiteralStringNode::compile(json &work) const {
+    (void) work;
+    return "[10, \"" + value + "\"]";
+}
 LiteralBoolNode::LiteralBoolNode(bool _value) : value(_value) {}
 Type LiteralBoolNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;

@@ -60,10 +60,23 @@ json num_value(std::string scratch_id) {
     if (scratch_id[0] == '[' && scratch_id[1] == '1') {
         return json::array({3, json::parse(scratch_id), json::array({4, "0"})});
     }
+    if (scratch_id[0] == '[') {
+        json data = json::parse(scratch_id);
+        // number / string
+        // NOLINTNEXTLINE
+        if (data[0] == 4 || data[0] == 10) {
+            return json::array({1, data});
+        }
+        // variable
+        // NOLINTNEXTLINE
+        if (data[0] == 12) {
+            return json::array({3, data, json::array({4, "0"})});
+        }
+    }
     return json::array({3, scratch_id, json::array({4, "0"})});
 }
 
 Type ASTNode::typeCheck(TypeCheckerContext &ctx) {
     (void) ctx;
-    throw std::runtime_error("what");
+    throw std::runtime_error("what the");
 }

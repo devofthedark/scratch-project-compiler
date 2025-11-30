@@ -88,7 +88,7 @@ set(SCOURCES
     "${SRC_DIR}/compiler/Parser.cpp"
     "${SRC_DIR}/compiler/ReturnStatement.cpp"
     "${SRC_DIR}/compiler/Statement.cpp"
-    "${SRC_DIR}/compiler/StdcallStatement.cpp"
+    "${SRC_DIR}/compiler/StdcallHook.cpp"
     "${SRC_DIR}/compiler/VariableAssignment.cpp"
     "${SRC_DIR}/compiler/VariableDeclaration.cpp"
     "${SRC_DIR}/compiler/VariableExpression.cpp"

@@ -66,13 +66,13 @@ public:
     virtual Type typeCheck(TypeCheckerContext &ctx);
     virtual void print(int depth = 0, std::string prefix = "");
     virtual std::string compile(json &work) const;
-    [[nodiscard]] virtual bool is_stdcall() const {
+    [[nodiscard]] virtual bool is_stdcall_hook() const {
         return false;
     }
-    // NOLINTNEXTLINE
-    virtual void add_arg_to_stdcall(std::string arg) {
+    virtual void add_arg_to_stdcall(const std::string &arg) {
         (void) arg;
     }
+    virtual void clear_stdcall_args() {}
 };
 
 json num_value(std::string scratch_id);

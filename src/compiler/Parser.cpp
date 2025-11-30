@@ -195,14 +195,19 @@ std::unique_ptr<FunctionDeclaration> parse_function_header(std::vector<Token>::c
     std::vector<Parameter> parameters;
     Type return_type = Type::VOID; // void by default
     for (auto it = begin + 2; it != loc; ++it) {
-        if (it->type != TokenType::NUM) {
+        if (it->type != TokenType::NUM && it->type != TokenType::STR) {
             throw SyntaxError("Expected type in function parameter", it->line);
         }
+        auto param_type = it->type;
         it++; // Move to identifier
         if (it == loc || it->type != TokenType::IDENTIFIER) {
             throw SyntaxError("Expected identifier in function parameter", it->line);
         }
-        parameters.push_back({it->value, Type::DOUBLE}); // For now, all parameters are DOUBLE
+        if (param_type == TokenType::NUM) {
+            parameters.push_back({it->value, Type::DOUBLE});
+        } else {
+            parameters.push_back({it->value, Type::STRING});
+        }
         if (it + 1 != loc && (it + 1)->type == TokenType::COMMA) {
             it++; // Skip comma
         }
@@ -227,6 +232,7 @@ std::unique_ptr<FunctionDeclaration> parse_function_header(std::vector<Token>::c
         }
         // For now, only DOUBLE return type is supported
         return_type = Type::DOUBLE;
+        loc += 2;
     } else if (itr != loc + 1 && (loc + 1)->type != TokenType::LBRACKET) {
         throw SyntaxError("Unexpected token in function definition", itr->line);
     }

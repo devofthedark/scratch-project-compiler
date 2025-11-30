@@ -39,9 +39,6 @@ Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) {
     if (is_stdcall_call) {
         implementation = function_sig->implementation;
     }
-    if (implementation) {
-        std::cerr << implementation->size() << " sZ\n";
-    }
 
     return function_sig->returnType;
 }
@@ -102,8 +99,7 @@ StatementSubstitution FunctionExpression::make_statement_compat(
         }
     }
     if (is_void_stdcall_hook) {
-        return_value.new_statements.emplace_back(
-            std::make_unique<StdcallStatement>(std::move(args)));
+        return_value.new_statements.push_back(std::make_unique<StdcallHook>(std::move(args)));
         return_value.replace_orig = true;
     }
     return return_value;
@@ -114,7 +110,10 @@ std::unique_ptr<Expression> FunctionExpression::make_expression_compat(
         replace_if_valid(arg, arg->make_expression_compat(statements_added));
     }
     if (is_return_stdcall_hook) {
-        return std::make_unique<StdcallExpression>(std::move(args), implementation);
+        return std::make_unique<StdcallExpression>(std::move(args));
+    }
+    if (is_stdcall_call) {
+        return nullptr;
     }
     std::string tmp_var_name =
         std::format("__scratch_compiler_tmp_var_{}", statements_added.tmp_variables++);
@@ -139,13 +138,20 @@ std::unique_ptr<Expression> FunctionExpression::conv_name(const std::set<std::st
 std::string FunctionExpression::compile(json &work) const {
     // stdcall handling
     if (is_stdcall_call) {
-        auto impl = implementation->getFirstStatement();
-        for (const auto &arg : args) {
-            impl->add_arg_to_stdcall(arg->compile(work));
+        const auto *const IMPL = implementation->getFirstStatement();
+        const auto *const EXPR = (*IMPL)->expr_if_return_statement();
+        (*EXPR)->clear_stdcall_args();
+        if (EXPR != nullptr) {
+            for (const auto &arg : args) {
+                (*EXPR)->add_arg_to_stdcall(arg->compile(work));
+            }
+            return (*EXPR)->compile(work);
         }
-        return impl->compile(work);
+        for (const auto &arg : args) {
+            (*IMPL)->add_arg_to_stdcall(arg->compile(work));
+        }
+        return (*IMPL)->compile(work);
     }
-    static_assert(std::is_same_v<decltype(args), std::vector<std::unique_ptr<Expression>>>);
     // Just the procedure_call block, return value has been handled
     std::string call_procedure = generate_id();
     json argids = json::array();
