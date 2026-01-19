@@ -1,8 +1,11 @@
 #include "StdcallHook.hpp"
 
+#include <format>
+#include <iostream>
 #include <memory>
 
 #include "compiler/Expression.hpp"
+#include "exceptions/LanguageErrors.hpp"
 
 namespace {
 // valid field names are given as FIELD_BEGIN, aval, bval, ..., FIELD_END, ("inputs" or "fields")
@@ -19,9 +22,28 @@ inline std::set<std::string> valid_field_names(const std::vector<std::unique_ptr
     }
     throw std::runtime_error("Internal Stdcall exception: fields parsing has no end");
 }
+
+inline void throw_error(const std::set<std::string> &valid_names,
+                        const std::string &passed_val,
+                        const std::string &opcode) {
+    std::string err_str = std::format(
+        R"(Hook to scratch block with opcode "{}" failed: a field was given the invalid value of "{}". Valid values are )",
+        opcode,
+        passed_val);
+    for (const auto &name : valid_names) {
+        err_str += std::format("\"{}\", ", name);
+    }
+    throw TypeError(err_str.substr(0, err_str.length() - 2));
+}
 } // namespace
 std::string StdcallHook::compile(json &work) const {
-    std::string opcode = args[0]->str_if_string_literal();
+    std::string opcode;
+    try {
+        opcode = args[0]->str_if_string_literal();
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
+        throw TypeError("In Stdcall Hook");
+    }
     std::string stdcall_id = generate_id();
     work[stdcall_id] = json::object({{"opcode", opcode},
                                      {"inputs", json::object({})},
@@ -33,21 +55,29 @@ std::string StdcallHook::compile(json &work) const {
     for (; pos < args.size(); pos += 2) {
         auto given_str = args[pos]->str_if_string_literal();
         if (given_str == "FIELD_BEGIN") {
-            auto valid_names = valid_field_names(args, ++pos);
-            auto area = args[pos++]->str_if_string_literal();
-            std::string opcode;
-            if (area == "inputs") {
-                opcode = args[pos++]->str_if_string_literal();
+            std::set<std::string> valid_names;
+            std::string internal_opcode;
+            std::string area;
+            std::string json_key;
+            std::string passed_val;
+            try {
+                valid_names = valid_field_names(args, ++pos);
+                area = args[pos++]->str_if_string_literal();
+                if (area == "inputs") {
+                    internal_opcode = args[pos++]->str_if_string_literal();
+                }
+                json_key = args[pos]->str_if_string_literal();
+            } catch (TypeError &e) {
+                throw TypeError(std::format("In hook to scratch block with opcode \"{}\"", opcode));
             }
-            auto json_key = args[pos]->str_if_string_literal();
-            auto passed_val = num_value(passed_args[passed_args_pos++])[1][1];
+            passed_val = num_value(passed_args[passed_args_pos++])[1][1];
             if (!valid_names.contains(passed_val)) {
-                throw std::runtime_error("StdcallHook field parsing error");
+                throw_error(valid_names, passed_val, opcode);
             }
             if (area == "inputs") {
                 auto tmp = generate_id();
                 work[tmp] = json::object(
-                    {{"opcode", opcode},
+                    {{"opcode", internal_opcode},
                      {"inputs", json::object({})},
                      {"fields", json::object({{json_key, json::array({passed_val, nullptr})}})},
                      {"shadow", true},

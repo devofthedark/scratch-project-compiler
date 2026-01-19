@@ -5,10 +5,13 @@
 #include <format>
 #include <iostream>
 
+#include "compiler/ASTNode.hpp"
 #include "compiler/Lexer.hpp"
 #include "compiler/Parser.hpp"
+#include "exceptions/LanguageErrors.hpp"
 #include "management/config.hpp"
 #include "management/project.hpp"
+#include "management/sprites.hpp"
 #include "utility/file_utils.hpp"
 #include "utility/md5.hpp"
 
@@ -20,6 +23,7 @@ std::vector<uint8_t> read_file(const std::string &path) {
                                 std::istreambuf_iterator<char>());
 }
 json compile_sprite(const std::string &name, mz_zip_archive *zipfile) {
+    static TypeCheckerContext stage_ctx;
     std::filesystem::path sprite_dir = std::filesystem::current_path() / name;
     json result;
     std::map<std::string, CostumeConfig> costumes;
@@ -128,14 +132,23 @@ json compile_sprite(const std::string &name, mz_zip_archive *zipfile) {
 
     auto tokens = tokenize((sprite_dir / "script.spc").string());
     auto ast = parse_tokens(tokens.begin(), tokens.end());
-    TypeCheckerContext ctx;
-    auto ast_type = ast.typeCheck(ctx);
-    if (ast_type == Type::ERROR) {
-        throw std::runtime_error("Type checking failed for sprite: " + name);
+
+    std::string main_script_id;
+    auto cur_ctx = stage_ctx;
+    try {
+        auto ast_type = ast.typeCheck(cur_ctx);
+        assert(ast_type != Type::ERROR);
+        ast.make_statement_compat(name);
+        ast.print();
+        main_script_id = ast.compile(result["blocks"]);
     }
-    ast.make_statement_compat();
-    ast.print();
-    std::string main_script_id = ast.compile(result["blocks"]);
+
+    catch (TypeError &e) {
+        std::cerr << std::format("{}\nIn compiling of sprite \"{}\"\n",
+                                 e.what(),
+                                 name == "." ? "[default stage]" : name);
+        throw std::runtime_error("");
+    }
     // Add when flag clicked block
     result["blocks"]["init"] = json::object({{"opcode", "event_whenflagclicked"},
                                              {"next", main_script_id},
@@ -145,6 +158,15 @@ json compile_sprite(const std::string &name, mz_zip_archive *zipfile) {
                                              {"topLevel", true},
                                              {"x", 0},
                                              {"y", 0}});
+    for (const auto &[name, type] : cur_ctx.getVariables()) {
+        if (stage_ctx.lookupVariable(name) == Type::ERROR && type != Type::ERROR) {
+            result["variables"][name] = json::array({name, 0});
+        }
+    }
+    if (name == ".") {
+        cur_ctx.reset_functions();
+        stage_ctx = cur_ctx;
+    }
 
     return result;
 }
@@ -173,11 +195,20 @@ void compile() {
     if (mz_zip_writer_init_file(&zipfile, "project.sb3", 0) == 0) {
         throw std::runtime_error("Failed to create sb3 archive");
     }
-    // Compile stage
-    result["targets"].push_back(compile_sprite(".", &zipfile));
-    // Compile sprites
-    for (const auto &sprite_name : project_config.sprites) {
-        result["targets"].push_back(compile_sprite(sprite_name, &zipfile));
+    try {
+        // Compile stage
+        result["targets"].push_back(compile_sprite(".", &zipfile));
+        // Compile sprites
+        for (const auto &sprite_name : project_config.sprites) {
+            if (RESERVED_NAMES.contains(sprite_name)) {
+                std::cerr << std::format(
+                    "Warning: will not compile sprite with reserved name \"{}\"\n", sprite_name);
+                continue;
+            }
+            result["targets"].push_back(compile_sprite(sprite_name, &zipfile));
+        }
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
     }
     // Write project.json to zipfile
     std::string project_json_str = result.dump(4);

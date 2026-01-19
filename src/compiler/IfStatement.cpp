@@ -1,6 +1,9 @@
 #include "IfStatement.hpp"
 
+#include <format>
 #include <iostream>
+
+#include "exceptions/LanguageErrors.hpp"
 
 IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
                          std::unique_ptr<BlockStatement> _trueBlock,
@@ -8,14 +11,17 @@ IfStatement::IfStatement(std::unique_ptr<Expression> _condition,
     : condition(std::move(_condition)), trueBlock(std::move(_trueBlock)),
       falseBlock(std::move(_falseBlock)) {}
 Type IfStatement::typeCheck(TypeCheckerContext &ctx) {
-    if (condition->typeCheck(ctx) != Type::BOOL) {
-        return Type::ERROR;
+    auto cond_type = condition->typeCheck(ctx);
+    if (cond_type != Type::BOOL) {
+        throw TypeError(
+            std::format("Condition for if statement is of wrong type: expected bool, got {}.",
+                        type_str(cond_type)));
     }
-    if (trueBlock->typeCheck(ctx) == Type::ERROR) {
-        return Type::ERROR;
-    }
-    if (falseBlock && falseBlock->typeCheck(ctx) == Type::ERROR) {
-        return Type::ERROR;
+    auto tmp_a = trueBlock->typeCheck(ctx);
+    assert(tmp_a != Type::ERROR);
+    if (falseBlock) {
+        auto tmp_b = falseBlock->typeCheck(ctx);
+        assert(tmp_b != Type::ERROR);
     }
     return Type::VOID;
 }
@@ -30,14 +36,16 @@ void IfStatement::print(int depth, std::string prefix) {
     }
 }
 
-StatementSubstitution IfStatement::make_statement_compat(const std::set<std::string> &args) {
-    StatementSubstitution return_value = {.new_statements = {},
-                                          .tmp_variables =
-                                              trueBlock->make_statement_compat(args).tmp_variables,
-                                          .replace_orig = false};
+StatementSubstitution IfStatement::make_statement_compat(const std::string &sprite_name,
+                                                         const std::set<std::string> &args) {
+    StatementSubstitution return_value = {
+        .new_statements = {},
+        .tmp_variables = trueBlock->make_statement_compat(sprite_name, args).tmp_variables,
+        .replace_orig = false};
     if (falseBlock) {
-        return_value.tmp_variables = std::max(falseBlock->make_statement_compat(args).tmp_variables,
-                                              return_value.tmp_variables);
+        return_value.tmp_variables =
+            std::max(falseBlock->make_statement_compat(sprite_name, args).tmp_variables,
+                     return_value.tmp_variables);
     }
     replace_if_valid(condition, condition->conv_name(args));
     replace_if_valid(condition, condition->conv_name(args));

@@ -17,7 +17,8 @@ struct StatementSubstitution {
 
 class Statement : virtual public ASTNode {
 public:
-    virtual StatementSubstitution make_statement_compat(const std::set<std::string> &args = {});
+    virtual StatementSubstitution make_statement_compat(const std::string &sprite_name,
+                                                        const std::set<std::string> &args = {});
     [[nodiscard]] virtual const std::unique_ptr<Expression> *expr_if_return_statement() const {
         return nullptr;
     }

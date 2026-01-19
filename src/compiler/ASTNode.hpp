@@ -1,5 +1,8 @@
 #pragma once
+#include <format>
 #include <nlohmann/json.hpp>
+
+#include "exceptions/LanguageErrors.hpp"
 using json = nlohmann::json;
 enum class Type : uint8_t {
     DOUBLE,
@@ -8,6 +11,21 @@ enum class Type : uint8_t {
     VOID, // Used for functions that don't return anything
     ERROR // Not *really* a type, but used for error handling
 };
+
+inline std::string type_str(Type type) {
+    switch (type) {
+        case Type::DOUBLE:
+            return "num";
+        case Type::BOOL:
+            return "bool";
+        case Type::STRING:
+            return "str";
+        case Type::VOID:
+        case Type::ERROR:
+            break;
+    }
+    throw std::runtime_error("not implemented");
+}
 
 class BlockStatement;
 class Expression;
@@ -33,6 +51,20 @@ struct FunctionKey {
     }
 };
 // NOLINTEND(misc-non-private-member-variables-in-classes)
+inline std::string func_sig_str(const std::string &name, const std::vector<Type> &param_types) {
+    std::string ret_val = std::format("fn {}(", name);
+    if (param_types.empty()) {
+        return ret_val + ")";
+    }
+    for (const auto &type : param_types) {
+        assert(type != Type::VOID || type != Type::ERROR);
+        ret_val += type_str(type) + ", ";
+    }
+    return ret_val.substr(0, ret_val.length() - 2) + ")";
+}
+inline std::string func_sig_str(const FunctionKey &key) {
+    return func_sig_str(key.name, key.argTypes);
+}
 class TypeCheckerContext {
 private:
     std::map<FunctionKey, FunctionSignature> functions;
@@ -54,7 +86,9 @@ public:
     void setExpectedReturnType(Type type);
     [[nodiscard]] Type getExpectedReturnType() const;
     [[nodiscard]] const std::map<std::string, Type> &getVariables() const;
+    void reset_functions();
 };
+
 class ASTNode {
 public:
     ASTNode() = default;
@@ -71,8 +105,11 @@ public:
     }
     virtual void add_arg_to_stdcall(const std::string &arg) {
         (void) arg;
+        throw TypeError("stdcall function has been defined improperly");
     }
-    virtual void clear_stdcall_args() {}
+    virtual void clear_stdcall_args() {
+        throw TypeError("stdcall function has been defined improperly");
+    }
 };
 
 json num_value(std::string scratch_id);

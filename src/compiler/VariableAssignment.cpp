@@ -3,16 +3,27 @@
 #include <format>
 #include <iostream>
 
+#include "compiler/ASTNode.hpp"
+#include "exceptions/LanguageErrors.hpp"
+
 VariableAssignment::VariableAssignment(std::string _name, std::unique_ptr<Expression> _value)
     : name(std::move(_name)), value(std::move(_value)) {}
 Type VariableAssignment::typeCheck(TypeCheckerContext &ctx) {
     // Check if the variable exists and is the correct type
-    Type var_type = ctx.lookupVariable(name);
-    if (var_type == Type::ERROR) {
-        return Type::ERROR;
+    Type var_type = Type::ERROR;
+    try {
+        var_type = ctx.lookupVariable(name);
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
+        throw TypeError(std::format("In assignment of variable \"{}\"", name));
     }
-    if (var_type != value->typeCheck(ctx)) {
-        return Type::ERROR;
+    assert(var_type != Type::ERROR);
+    auto type = value->typeCheck(ctx);
+    if (var_type != type) {
+        throw TypeError(std::format("Cannot assign value of type {} to variable \"{}\" of type {}.",
+                                    type_str(type),
+                                    name,
+                                    type_str(var_type)));
     }
     return Type::VOID;
 }
@@ -21,7 +32,8 @@ std::unique_ptr<Expression> VariableAssignment::release_value() {
     return std::move(value);
 }
 
-StatementSubstitution VariableAssignment::make_statement_compat(const std::set<std::string> &args) {
+StatementSubstitution VariableAssignment::make_statement_compat(const std::string &sprite_name,
+                                                                const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables = 0,
                                           .replace_orig = false};
@@ -31,7 +43,7 @@ StatementSubstitution VariableAssignment::make_statement_compat(const std::set<s
                         name));
     }
     replace_if_valid(value, value->conv_name(args));
-    replace_if_valid(value, value->make_expression_compat(return_value));
+    replace_if_valid(value, value->make_expression_compat(sprite_name, return_value));
     return return_value;
 }
 

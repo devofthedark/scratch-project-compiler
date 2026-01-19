@@ -6,6 +6,7 @@
 
 #include "compiler/FunctionArgument.hpp"
 #include "compiler/FunctionBody.hpp"
+#include "exceptions/LanguageErrors.hpp"
 
 FunctionDeclaration::FunctionDeclaration(std::string _name,
                                          std::shared_ptr<BlockStatement> _body,
@@ -16,31 +17,28 @@ FunctionDeclaration::FunctionDeclaration(std::string _name,
       returnType(_returnType), is_stdcall(is_stdcall) {}
 Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) {
     // Check the return type
-    if (returnType == Type::ERROR) {
-        return Type::ERROR;
-    }
+    assert(returnType != Type::ERROR);
     // Check if the function name is already used
     // Check if name starts with "__"
     if (name.starts_with("__")) {
-        return Type::ERROR;
+        throw TypeError(std::format(
+            R"(Function "{}" violates reserved name rule: function names starting with "__" are reserved.)",
+            name));
     }
 
     // Check the parameters
     std::vector<Type> param_types;
+    std::map<std::string, Type> old_types;
     for (const auto &param : parameters) {
-        if (param.type == Type::ERROR) {
-            return Type::ERROR;
-        }
-        // Check if the parameter name is already used
-        if (ctx.lookupVariable(param.name) != Type::ERROR) {
-            return Type::ERROR;
-        }
+        assert(param.type != Type::ERROR);
+        old_types[param.name] = ctx.lookupVariable(param.name);
         // Add the parameter to the context
         ctx.addVariable(param.name, param.type);
         param_types.push_back(param.type);
     }
     if (ctx.lookupFunction(name, param_types) != nullptr) {
-        return Type::ERROR;
+        throw TypeError(std::format("Cannot declare {}: function already exists.",
+                                    func_sig_str(name, param_types)));
     }
     // Set return type
     ctx.setExpectedReturnType(returnType);
@@ -48,12 +46,23 @@ Type FunctionDeclaration::typeCheck(TypeCheckerContext &ctx) {
     ctx.addFunction(name, param_types, returnType, body, is_stdcall);
 
     // Check the function body
-    if (body->typeCheck(ctx) == Type::ERROR) {
-        return Type::ERROR;
+
+    Type tmp = Type::ERROR;
+    try {
+        tmp = body->typeCheck(ctx);
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
+        if (returnType != Type::VOID) {
+            throw TypeError(std::format("In definition of {} -> {}",
+                                        func_sig_str(name, param_types),
+                                        type_str(returnType)));
+        }
+        throw TypeError(std::format("In definition of {}", func_sig_str(name, param_types)));
     }
+    assert(tmp != Type::ERROR);
     ctx.setExpectedReturnType(Type::VOID);
-    for (const auto &param : parameters) {
-        ctx.removeVariable(param.name);
+    for (const auto &[name, type] : old_types) {
+        ctx.addVariable(name, type); // If type is Type::ERROR than this is hacky af
     }
 
     return returnType;
@@ -73,13 +82,13 @@ void FunctionDeclaration::print(int depth, std::string prefix) {
 }
 
 StatementSubstitution FunctionDeclaration::make_statement_compat(
-    const std::set<std::string> &args) {
+    const std::string &sprite_name, const std::set<std::string> &args) {
     (void) args;
     std::set<std::string> rep;
     for (const auto &param : parameters) {
         rep.insert(param.name);
     }
-    auto ret_val = body->make_statement_compat(rep);
+    auto ret_val = body->make_statement_compat(sprite_name, rep);
     if (is_stdcall) {
         return ret_val;
     }

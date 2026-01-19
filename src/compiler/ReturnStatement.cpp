@@ -10,9 +10,7 @@ ReturnStatement::ReturnStatement(std::unique_ptr<Expression> _return_value)
 Type ReturnStatement::typeCheck(TypeCheckerContext &ctx) {
     Type ret_type = return_value->typeCheck(ctx);
     Type expected_type = ctx.getExpectedReturnType();
-    if (ret_type == Type::ERROR || expected_type == Type::ERROR) {
-        return Type::ERROR;
-    }
+    assert(ret_type != Type::ERROR && expected_type != Type::ERROR);
     return ret_type;
 }
 void ReturnStatement::print(int depth, std::string prefix) {
@@ -24,19 +22,20 @@ void ReturnStatement::print(int depth, std::string prefix) {
     }
 }
 
-StatementSubstitution ReturnStatement::make_statement_compat(const std::set<std::string> &args) {
+StatementSubstitution ReturnStatement::make_statement_compat(const std::string &sprite_name,
+                                                             const std::set<std::string> &args) {
     StatementSubstitution ret_value = {.new_statements = {},
                                        .tmp_variables = 0,
                                        .replace_orig = false};
     if (return_value) {
         replace_if_valid(return_value, return_value->conv_name(args));
-        replace_if_valid(return_value, return_value->make_expression_compat(ret_value));
+        replace_if_valid(return_value,
+                         return_value->make_expression_compat(sprite_name, ret_value));
         if (return_value->is_stdcall_hook()) {
             return ret_value;
         }
-        ret_value.new_statements.push_back(
-            std::make_unique<VariableAssignment>("__scratch_compiler_function_return_value",
-                                                 std::move(return_value)));
+        ret_value.new_statements.push_back(std::make_unique<VariableAssignment>(
+            "__scratch_compiler_function_return_value_" + sprite_name, std::move(return_value)));
     }
     return ret_value;
 }

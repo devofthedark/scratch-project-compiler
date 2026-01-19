@@ -1,11 +1,13 @@
 #include "BinaryOp.hpp"
 
+#include <format>
 #include <iostream>
 #include <memory>
 
 #include "compiler/ASTNode.hpp"
 #include "compiler/NotOperator.hpp"
 #include "compiler/Statement.hpp"
+#include "exceptions/LanguageErrors.hpp"
 
 BinaryOp::BinaryOp(std::unique_ptr<Expression> _left,
                    std::unique_ptr<Expression> _right,
@@ -23,10 +25,9 @@ BinaryOperator BinaryOp::getOperator() const {
 Type BinaryOp::typeCheck(TypeCheckerContext &ctx) {
     Type left_type = left->typeCheck(ctx);
     Type right_type = right->typeCheck(ctx);
+    Type expected_type = Type::BOOL;
 
-    if (left_type == Type::ERROR || right_type == Type::ERROR) {
-        return Type::ERROR;
-    }
+    assert(left_type != Type::ERROR && right_type != Type::ERROR);
 
     switch (op) {
         case BinaryOperator::ADD:
@@ -34,21 +35,42 @@ Type BinaryOp::typeCheck(TypeCheckerContext &ctx) {
         case BinaryOperator::MULTIPLY:
         case BinaryOperator::DIVIDE:
         case BinaryOperator::MODULO:
-            return (left_type == Type::DOUBLE && right_type == Type::DOUBLE) ? Type::DOUBLE
-                                                                             : Type::ERROR;
-        case BinaryOperator::AND:
-        case BinaryOperator::OR:
-            return (left_type == Type::BOOL && right_type == Type::BOOL) ? Type::BOOL : Type::ERROR;
+            expected_type = Type::DOUBLE;
+            if (left_type != Type::DOUBLE || right_type != Type::DOUBLE) {
+                throw TypeError(std::format("Invalid types for operator {0}: expected num {0} num, "
+                                            "got {1} {0} {2} instead.",
+                                            op_str(op),
+                                            type_str(left_type),
+                                            type_str(right_type)));
+            }
+            break;
         case BinaryOperator::EQUAL:
         case BinaryOperator::NOT_EQUAL:
         case BinaryOperator::GREATER_THAN:
         case BinaryOperator::LESS_THAN:
         case BinaryOperator::GREATER_THAN_EQUAL:
         case BinaryOperator::LESS_THAN_EQUAL:
-            return (left_type == Type::DOUBLE && right_type == Type::DOUBLE) ? Type::BOOL
-                                                                             : Type::ERROR;
+            if (left_type != Type::DOUBLE || right_type != Type::DOUBLE) {
+                throw TypeError(std::format("Invalid types for operator {0}: expected num {0} num, "
+                                            "got {1} {0} {2} instead.",
+                                            op_str(op),
+                                            type_str(left_type),
+                                            type_str(right_type)));
+            }
+            break;
+        case BinaryOperator::AND:
+        case BinaryOperator::OR:
+            if (left_type != Type::BOOL || right_type != Type::BOOL) {
+                throw TypeError(
+                    std::format("Invalid types for operator {0}: expected bool {0} bool, "
+                                "got {1} {0} {2} instead.",
+                                op_str(op),
+                                type_str(left_type),
+                                type_str(right_type)));
+            }
+            break;
     }
-    return Type::ERROR; // Fallback
+    return expected_type;
 }
 void BinaryOp::print(int depth, std::string prefix) {
     std::string op_str;
@@ -203,9 +225,9 @@ json num_value(std::string scratch_id, bool is_boolean) {
 } // namespace
 
 std::unique_ptr<Expression> BinaryOp::make_expression_compat(
-    StatementSubstitution &statements_added) {
-    replace_if_valid(left, left->make_expression_compat(statements_added));
-    replace_if_valid(right, right->make_expression_compat(statements_added));
+    const std::string &sprite_name, StatementSubstitution &statements_added) {
+    replace_if_valid(left, left->make_expression_compat(sprite_name, statements_added));
+    replace_if_valid(right, right->make_expression_compat(sprite_name, statements_added));
     std::cout << "make_expression_compat invoked\n";
     if (op == BinaryOperator::NOT_EQUAL) {
         return std::make_unique<NotOperator>(

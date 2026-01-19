@@ -11,9 +11,8 @@ BlockStatement::BlockStatement(std::vector<std::unique_ptr<Statement>> &_stateme
                  std::make_move_iterator(_statements.end())) {}
 Type BlockStatement::typeCheck(TypeCheckerContext &ctx) {
     for (const auto &stmt : statements) {
-        if (stmt->typeCheck(ctx) == Type::ERROR) {
-            return Type::ERROR;
-        }
+        auto res = stmt->typeCheck(ctx);
+        assert(res != Type::ERROR);
     }
     return Type::VOID;
 }
@@ -27,12 +26,13 @@ void BlockStatement::print(int depth, std::string prefix) {
     }
 }
 
-StatementSubstitution BlockStatement::make_statement_compat(const std::set<std::string> &args) {
+StatementSubstitution BlockStatement::make_statement_compat(const std::string &sprite_name,
+                                                            const std::set<std::string> &args) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables = 0,
                                           .replace_orig = false};
     for (auto it = statements.begin(); it != statements.end();) {
-        auto compat_statements = (*it)->make_statement_compat(args);
+        auto compat_statements = (*it)->make_statement_compat(sprite_name, args);
         statements.insert(it,
                           std::make_move_iterator(compat_statements.new_statements.begin()),
                           std::make_move_iterator(compat_statements.new_statements.end()));

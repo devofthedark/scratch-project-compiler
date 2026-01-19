@@ -1,7 +1,10 @@
 #include "ASTNode.hpp"
 
+#include <format>
 #include <iostream>
 #include <utility>
+
+#include "exceptions/LanguageErrors.hpp"
 void TypeCheckerContext::addVariable(const std::string &name, Type type) {
     variables[name] = type;
 }
@@ -21,7 +24,7 @@ Type TypeCheckerContext::lookupVariable(const std::string &name) const {
     if (itr != variables.end()) {
         return itr->second;
     }
-    return Type::ERROR; // Variable not found
+    return Type::ERROR;
 }
 const FunctionSignature *TypeCheckerContext::lookupFunction(
     const std::string &name, const std::vector<Type> &argTypes) const {
@@ -30,7 +33,7 @@ const FunctionSignature *TypeCheckerContext::lookupFunction(
     if (itr != functions.end()) {
         return &itr->second;
     }
-    return nullptr; // Function not foundi
+    return nullptr;
 }
 void TypeCheckerContext::removeVariable(const std::string &name) {
     variables.erase(name);
@@ -43,6 +46,10 @@ Type TypeCheckerContext::getExpectedReturnType() const {
 }
 const std::map<std::string, Type> &TypeCheckerContext::getVariables() const {
     return variables;
+}
+void TypeCheckerContext::reset_functions() {
+    functions.clear();
+    expectedReturnType = Type::VOID;
 }
 
 void ASTNode::print(int depth, std::string prefix) {

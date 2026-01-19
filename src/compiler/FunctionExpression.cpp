@@ -4,10 +4,12 @@
 #include <format>
 #include <iostream>
 
+#include "compiler/ASTNode.hpp"
 #include "compiler/StdcallExpression.hpp"
 #include "compiler/StdcallStatement.hpp"
 #include "compiler/VariableAssignment.hpp"
 #include "compiler/VariableExpression.hpp"
+#include "exceptions/LanguageErrors.hpp"
 
 FunctionExpression::FunctionExpression(std::string _name,
                                        std::vector<std::unique_ptr<Expression>> _args)
@@ -22,17 +24,18 @@ Type FunctionExpression::typeCheck(TypeCheckerContext &ctx) {
         return Type::DOUBLE;
     }
     // Check if the function exists
-    const FunctionSignature *function_sig = ctx.lookupFunction(name, getArgTypes(ctx));
-    if (function_sig == nullptr) {
-        return Type::ERROR;
+    std::vector<Type> arg_types;
+    try {
+        arg_types = getArgTypes(ctx);
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
+        throw TypeError(std::format("In attempted function call to \"{}\"", name));
     }
-
-    // Check the argument types
-    for (size_t i = 0; i < args.size(); ++i) {
-        Type arg_type = args[i]->typeCheck(ctx);
-        if (arg_type != function_sig->argTypes[i]) {
-            return Type::ERROR;
-        }
+    f_sig_str = func_sig_str(name, arg_types);
+    const FunctionSignature *function_sig = ctx.lookupFunction(name, arg_types);
+    if (function_sig == nullptr) {
+        throw TypeError(
+            std::format("Attempted call to {} failed: function does not exist.", f_sig_str));
     }
 
     is_stdcall_call = function_sig->is_stdcall;
@@ -84,7 +87,7 @@ void FunctionExpression::print(int depth, std::string prefix) {
 }
 
 StatementSubstitution FunctionExpression::make_statement_compat(
-    const std::set<std::string> &names) {
+    const std::string &sprite_name, const std::set<std::string> &names) {
     StatementSubstitution return_value = {.new_statements = {},
                                           .tmp_variables = 0,
                                           .replace_orig = false};
@@ -93,7 +96,7 @@ StatementSubstitution FunctionExpression::make_statement_compat(
         if (tmp) {
             arg = std::move(tmp);
         }
-        tmp = arg->make_expression_compat(return_value);
+        tmp = arg->make_expression_compat(sprite_name, return_value);
         if (tmp) {
             arg = std::move(tmp);
         }
@@ -105,9 +108,9 @@ StatementSubstitution FunctionExpression::make_statement_compat(
     return return_value;
 }
 std::unique_ptr<Expression> FunctionExpression::make_expression_compat(
-    StatementSubstitution &statements_added) {
+    const std::string &sprite_name, StatementSubstitution &statements_added) {
     for (auto &arg : args) {
-        replace_if_valid(arg, arg->make_expression_compat(statements_added));
+        replace_if_valid(arg, arg->make_expression_compat(sprite_name, statements_added));
     }
     if (is_return_stdcall_hook) {
         return std::make_unique<StdcallExpression>(std::move(args));
@@ -115,13 +118,15 @@ std::unique_ptr<Expression> FunctionExpression::make_expression_compat(
     if (is_stdcall_call) {
         return nullptr;
     }
-    std::string tmp_var_name =
-        std::format("__scratch_compiler_tmp_var_{}", statements_added.tmp_variables++);
+    std::string tmp_var_name = std::format("__scratch_compiler_tmp_var_{}_{}",
+                                           statements_added.tmp_variables++,
+                                           sprite_name);
     statements_added.new_statements.push_back(
         std::make_unique<FunctionExpression>(std::move(name), std::move(args)));
     statements_added.new_statements.push_back(std::make_unique<VariableAssignment>(
         tmp_var_name,
-        std::make_unique<VariableExpression>("__scratch_compiler_function_return_value")));
+        std::make_unique<VariableExpression>(
+            std::format("__scratch_compiler_function_return_value_{}", sprite_name))));
     return std::make_unique<VariableExpression>(tmp_var_name);
 }
 
@@ -138,19 +143,24 @@ std::unique_ptr<Expression> FunctionExpression::conv_name(const std::set<std::st
 std::string FunctionExpression::compile(json &work) const {
     // stdcall handling
     if (is_stdcall_call) {
-        const auto *const IMPL = implementation->getFirstStatement();
-        const auto *const EXPR = (*IMPL)->expr_if_return_statement();
-        (*EXPR)->clear_stdcall_args();
-        if (EXPR != nullptr) {
-            for (const auto &arg : args) {
-                (*EXPR)->add_arg_to_stdcall(arg->compile(work));
+        try {
+            const auto *const IMPL = implementation->getFirstStatement();
+            const auto *const EXPR = (*IMPL)->expr_if_return_statement();
+            if (EXPR != nullptr) {
+                (*EXPR)->clear_stdcall_args();
+                for (const auto &arg : args) {
+                    (*EXPR)->add_arg_to_stdcall(arg->compile(work));
+                }
+                return (*EXPR)->compile(work);
             }
-            return (*EXPR)->compile(work);
+            for (const auto &arg : args) {
+                (*IMPL)->add_arg_to_stdcall(arg->compile(work));
+            }
+            return (*IMPL)->compile(work);
+        } catch (TypeError &e) {
+            std::cerr << e.what() << '\n';
+            throw TypeError(std::format("In call to {}", f_sig_str));
         }
-        for (const auto &arg : args) {
-            (*IMPL)->add_arg_to_stdcall(arg->compile(work));
-        }
-        return (*IMPL)->compile(work);
     }
     // Just the procedure_call block, return value has been handled
     std::string call_procedure = generate_id();

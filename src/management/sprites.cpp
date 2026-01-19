@@ -10,6 +10,9 @@
 
 using json = nlohmann::json;
 void new_sprite(std::string name) {
+    if (RESERVED_NAMES.contains(name)) {
+        std::cerr << std::format("Cannot create sprite \"{}\": is a reserved name\n", name);
+    }
     std::filesystem::path current_dir = std::filesystem::current_path();
     // read config.json into a Projectconfig object
     json json_data;
@@ -44,6 +47,9 @@ void new_sprite(std::string name) {
     std::cout << std::format("Sprite {} created\n", name);
 }
 void delete_sprite(std::string name) {
+    if (RESERVED_NAMES.contains(name)) {
+        std::cerr << std::format("Cannot delete sprite \"{}\": is a reserved name\n", name);
+    }
     std::filesystem::path current_dir = std::filesystem::current_path();
     // read config.json into a Projectconfig object
     json json_data;

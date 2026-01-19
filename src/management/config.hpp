@@ -29,7 +29,6 @@ struct SpriteConfig {
 };
 struct ProjectConfig {
     std::vector<std::string> sprites;
-    std::vector<std::string> sounds;
     std::map<std::string, CostumeConfig> costumes;
     std::string default_costume;
     ProjectConfig() : sprites({}) {}
@@ -53,5 +52,5 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SpriteConfig,
                                    draggable,
                                    rotation_style,
                                    costumes);
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectConfig, sprites, sounds, costumes, default_costume);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ProjectConfig, sprites, costumes, default_costume);
 // NOLINTEND(modernize-use-constraints)

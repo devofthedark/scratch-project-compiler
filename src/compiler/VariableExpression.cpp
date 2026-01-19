@@ -1,11 +1,17 @@
 #include "VariableExpression.hpp"
 
+#include <format>
 #include <iostream>
 
 #include "FunctionArgument.hpp"
+#include "exceptions/LanguageErrors.hpp"
 VariableExpression::VariableExpression(std::string _name) : name(std::move(_name)) {}
 Type VariableExpression::typeCheck(TypeCheckerContext &ctx) {
-    return ctx.lookupVariable(name);
+    auto tmp = ctx.lookupVariable(name);
+    if (tmp == Type::ERROR) {
+        throw TypeError(std::format("Variable \"{}\" does not exist.", name));
+    }
+    return tmp;
 }
 const std::string &VariableExpression::getName() const {
     return name;

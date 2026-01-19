@@ -1,7 +1,10 @@
 #include "VariableDeclaration.hpp"
 
+#include <format>
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
+
+#include "exceptions/LanguageErrors.hpp"
 
 VariableDeclaration::VariableDeclaration(std::string _name,
                                          std::unique_ptr<Expression> _value,
@@ -12,16 +15,29 @@ VariableDeclaration::VariableDeclaration(VariableAssignment &assignment, Type _t
 Type VariableDeclaration::typeCheck(TypeCheckerContext &ctx) {
     // Check if the variable name is already used
     if (ctx.lookupVariable(name) != Type::ERROR) {
-        return Type::ERROR;
+        throw TypeError(std::format("Cannot redeclare already existing variable \"{}\".", name));
+    }
+    if (name.starts_with("id_")) {
+        throw TypeError("Variables beginning with \"id_\" are reserved.");
+    }
+    if (name.starts_with("__")) {
+        throw TypeError("Variables beginning with \"__\" are reserved.");
     }
     // Check the initializer
-    Type init_type = value->typeCheck(ctx);
-    if (init_type == Type::ERROR) {
-        return Type::ERROR;
+    Type init_type = Type::ERROR;
+    try {
+        init_type = value->typeCheck(ctx);
+    } catch (TypeError &e) {
+        std::cerr << e.what() << '\n';
+        throw TypeError(std::format("In declaration of variable \"{}\"", name));
     }
+    assert(init_type != Type::ERROR);
     // Check if the initializer type matches the variable type
     if (init_type != type) {
-        return Type::ERROR;
+        throw TypeError(std::format("Cannot assign value of type {} to variable \"{}\" of type {}.",
+                                    type_str(init_type),
+                                    name,
+                                    type_str(type)));
     }
     // Add the variable to the context
     ctx.addVariable(name, type);
